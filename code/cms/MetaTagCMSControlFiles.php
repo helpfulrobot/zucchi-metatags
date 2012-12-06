@@ -175,35 +175,38 @@ class MetaTagCMSControlFiles extends Controller {
 
 	function MyRecords() {
 		//Filesystem::sync($this->ParentID);
-		$files = DataObject::get($this->tableArray[0], "ParentID = ".$this->ParentID, '', '', $this->myRecordsLimit());
+		$files = DataObject::get($this->tableArray[0], "\"ParentID\" = ".$this->ParentID, '', '', $this->myRecordsLimit());
 		$dos = null;
 		if($files) {
 			foreach($files as $file) {
 				$file->ChildrenLink = '';
+				if(!$file->canView() || !file_exists($file->getFullPath())) {
+					$files->remove($file);
+				}
 				if(DataObject::get_one($this->tableArray[0], "ParentID = ".$file->ID)) {
 					$file->ChildrenLink = $this->createLevelLink($file->ID);
 				}
-				if(!$file->canView(new Member()) || !file_exists($file->getFullPath())) {
-					$files->remove($file);
-				}
 				if($file instanceOf Image) {
 					$file->Type == "Image";
+					//$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file->ID);
 				}
 				elseif($file instanceOf Folder) {
 					$file->Type == "Folder";
 					$file->Icon == "metatags/images/Folder.png";
+					$file->UsageCount = 0;
 				}
 				else {
 					$files->remove($file);
 				}
 				$file->GoOneUpLink = $this->GoOneUpLink();
 				$file->RecycleLink = $this->makeRecycleLink($file->ID);
-				$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file->ID);
 				$dos[$file->ID] = new DataObjectSet();
 				$segmentArray = array();
 				$item = $file;
 				$segmentArray[] = array("URLSegment" => $item->Name, "ID" => $item->ID, "ClassName" => $item->ClassName, "Title" => $item->Title, "Link" => "/".$item->Filename);
-				while($item && $item->ParentID) {
+				$x = 0;
+				while($item && $item->ParentID && $x < 10) {
+					$x++;
 					$item = DataObject::get_by_id($this->tableArray[0], $item->ParentID);
 					if($item) {
 						$segmentArray[] = array("URLSegment" => $item->Name, "ID" => $item->ID, "ClassName" => $item->ClassName, "Title" => $item->Title, "Link" => $this->createLevelLink(intval($item->ParentID)-0));
