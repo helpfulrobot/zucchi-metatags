@@ -329,7 +329,7 @@ class MetaTagAutomation_controller extends Extension {
 		}
 		if($includeTitle) {
 			$titleTag = '
-			<title>'.trim(Convert::raw2att($siteConfig->PrependToMetaTitle.' '.$title.' '.$siteConfig->AppendToMetaTitle)).'</title>';
+			<title>'.trim(Convert::raw2att($siteConfig->PrependToMetaTitle.' '.$page->MetaTitle.' '.$siteConfig->AppendToMetaTitle)).'</title>';
 		}
 		else {
 			$titleTag = '';

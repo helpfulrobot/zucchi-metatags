@@ -12,7 +12,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"FileClassName" => "Varchar(255)"
 	);
 
-	public static function file_usage_count($fileID, $checkChildren = true, $quickBooleanCheck = false) {
+	public static function file_usage_count($fileID, $checkChildren = false, $quickBooleanCheck = true) {
 		if(!isset(self::$file_usage_array[$fileID])) {
 			self::$file_usage_array[$fileID] = 0;
 			$checks = DataObject::get("MetaTagCMSControlFileUse");

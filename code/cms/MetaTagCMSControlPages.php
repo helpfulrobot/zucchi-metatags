@@ -110,8 +110,6 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 						return Security::permissionFailure($this);
 					}
 					foreach($this->tableArray as $table) {
-						$table = str_replace("_Live", "", $table);
-
 						DB::query("UPDATE \"$table\" SET \"$fieldName\" = '".$value."' WHERE \"$table\".\"ID\" = ".$recordID);
 						$urlSegmentValue = '';
 						if($fieldName == "Title") {
