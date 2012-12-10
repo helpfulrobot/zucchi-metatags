@@ -20,7 +20,7 @@ input:focus, textarea:focus {color:#AD2424!important; background-color: #fff!imp
 a{text-decoration: none; color: #82837E;}
 a:link{text-decoration: none;}
 a:visited{text-decoration: none;}
-a:hover{background-color: #BFFA37!important;}
+a:hover {background-color: #BFFA37!important;}
 a:active{color: #AD2424;}
 
 
@@ -87,3 +87,6 @@ td.filename .errorHolder {height: 100px; width:100px; color: red!important;margi
 .fileInfo span.label {font-weight: bold;}
 .fileInfo span.data {}
 .fileInfo .usage {margin-top: 10px; text-align: right;}
+
+
+.pageNumbers strong{background-color: #BFFA37!important;}
