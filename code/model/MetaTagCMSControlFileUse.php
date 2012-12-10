@@ -125,7 +125,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 		if(!isset(self::$file_usage_array[$fileID])) {
 			self::$file_usage_array[$fileID] = 0;
 			$sql = "SELECT COUNT(ID) FROM \"File\" WHERE \"ParentID\" = {$fileID};";
-			if($childCount = DB::query($sql)->value) {
+			$result = DB::query($sql, false);
+			$childCount = $result->value();
+			if($childCount) {
 				self::$file_usage_array[$fileID] = $childCount;
 				return self::$file_usage_array[$fileID];
 			}
