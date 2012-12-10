@@ -36,6 +36,9 @@ class MetaTagCMSControlFiles extends Controller {
 		Requirements::javascript("sapphire/thirdparty/jquery-form/jquery.form.js");
 		Requirements::javascript("metatags/javascript/MetaTagCMSControl.js");
 		Requirements::themedCSS("MetaTagCMSControl");
+		if($parentID = intval($this->request->getVar("childrenof"))) {
+			$this->ParentID = $parentID;
+		}
 	}
 
 	/***************************************************
@@ -48,7 +51,10 @@ class MetaTagCMSControlFiles extends Controller {
 	}
 
 	function childrenof($request) {
-		$this->ParentID = intval($request->param("ID"));
+		$id = intval($request->param("ID"));
+		if($id) {
+			$this->ParentID = $id;
+		}
 		return array();
 	}
 
@@ -180,23 +186,22 @@ class MetaTagCMSControlFiles extends Controller {
 		if($files) {
 			foreach($files as $file) {
 				$file->ChildrenLink = '';
-				if(!$file->canView() || !file_exists($file->getFullPath())) {
-					$files->remove($file);
+				if(!$file->canView() ) {
+					$file->Error = "YOU DO NOT HAVE PERMISSION TO VIEW THIS FILE.";
+				}
+				if(!file_exists($file->getFullPath())) {
+					$file->Error = "FILE CAN NOT BE FOUND.";
 				}
 				if(DataObject::get_one($this->tableArray[0], "ParentID = ".$file->ID)) {
 					$file->ChildrenLink = $this->createLevelLink($file->ID);
 				}
-				if($file instanceOf Image) {
-					$file->Type == "Image";
-					//$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file->ID);
-				}
-				elseif($file instanceOf Folder) {
+				if($file instanceOf Folder) {
 					$file->Type == "Folder";
 					$file->Icon == "metatags/images/Folder.png";
 					$file->UsageCount = 0;
 				}
 				else {
-					$files->remove($file);
+					$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file->ID, false);
 				}
 				$file->GoOneUpLink = $this->GoOneUpLink();
 				$file->RecycleLink = $this->makeRecycleLink($file->ID);
@@ -245,7 +250,13 @@ class MetaTagCMSControlFiles extends Controller {
 	}
 
 	protected function makeRecycleLink($id) {
-		return $this->Link("recycle").$id."/";
+		if(!isset($_GET["start"])) {
+			$start = 0;
+		}
+		else {
+			$start = intval($_GET["start"]);
+		}
+		return $this->Link("recycle").$id."/?childrenof=".$this->ParentID."&amp;start=".$start;
 	}
 
 	function Message() {
