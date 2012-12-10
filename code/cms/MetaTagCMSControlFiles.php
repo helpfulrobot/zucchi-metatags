@@ -152,10 +152,15 @@ class MetaTagCMSControlFiles extends Controller {
 			if($folder) {
 				$file = DataObject::get_by_id("File", $id);
 				if($file) {
-					$file->ParentID = $folder->ID;
-					$file->write();
-					Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.FILERECYCLED", "File &quot;".$file->Title."&quot; has been recycled."));
-					return $this->returnAjaxOrRedirectBack();
+					if(file_exists($file->getFullPath())) {
+						$file->ParentID = $folder->ID;
+						$file->write();
+						Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.FILERECYCLED", "File &quot;".$file->Title."&quot; has been recycled."));
+						return $this->returnAjaxOrRedirectBack();
+					}
+					else {
+						$file->delete();
+					}
 				}
 			}
 		}
