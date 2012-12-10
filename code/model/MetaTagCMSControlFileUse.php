@@ -124,6 +124,10 @@ class MetaTagCMSControlFileUse extends DataObject {
 	public static function file_usage_count($fileID, $quickBooleanCheck = false) {
 		if(!isset(self::$file_usage_array[$fileID])) {
 			self::$file_usage_array[$fileID] = 0;
+			if($children = DataObject::get("Folder", "ParentID =".$fileID)) {
+				self::$file_usage_array[$fileID] = $children->count();
+				return self::$file_usage_array[$fileID];
+			}
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
 			if($checks) {
 				foreach($checks as $check) {
