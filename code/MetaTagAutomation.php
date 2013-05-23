@@ -327,6 +327,12 @@ class MetaTagAutomation_controller extends Extension {
 		if(MetaTagAutomation::get_use_themed_favicon()) {
 			$faviconBase .= $themeFolder;
 		}
+		if(!$page->MetaTitle) {
+			$page->MetaTitle = $page->Title; 
+		}
+		if(!$page->MetaTitle) {
+			$page->MetaTitle = $page->MenuTitle; 
+		}
 		if($includeTitle) {
 			$titleTag = '
 			<title>'.trim(Convert::raw2att($siteConfig->PrependToMetaTitle.' '.$page->MetaTitle.' '.$siteConfig->AppendToMetaTitle)).'</title>';
