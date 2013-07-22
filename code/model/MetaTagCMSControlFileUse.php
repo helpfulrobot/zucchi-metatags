@@ -242,7 +242,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 					$objects = DataObject::get(
 						$objName,
 						$where,
-						null,
+						$sort = null,
 						$join,
 						$limit = 1
 					);
@@ -260,7 +260,12 @@ class MetaTagCMSControlFileUse extends DataObject {
 						}
 					}
 					else {
-						DB::alteration_message("File <i>".$file-Title."</i> is not being used - SECOND CHECK", "deleted");
+						DB::alteration_message("File <i>".$file->Title."</i> is not being used - SECOND CHECK", "deleted");
+						echo $objName."<hr />";
+						echo $where."<hr />";
+						echo $join."<hr />";
+						echo $sort."<hr />";
+						echo $limit."<hr />";
 					}
 				}
 			}
