@@ -219,7 +219,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 							break;
 						case "HAS_MANY":
 							$objName = $check->DataObjectClassName;
-							$where = "\"{$check->DataObjectFieldName}\".\"ID\" = {$fileID}";
+							$where = "\"{$check->DataObjectClassName}\".\"ID\" = {$fileID}";
 							$innerJoinTable = "$check->FileClassName";
 							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"";
 							break;
