@@ -14,6 +14,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"DataObjectClassName" => "Varchar(255)",
 		"DataObjectFieldName" => "Varchar(255)",
 		"FileClassName" => "Varchar(255)",
+		"IsLiveVersion" => "Boolean",
 		"ConnectionType" => "Enum('HAS_ONE,HAS_MANY,MANY_MANY,BELONGS_MANY_MANY')"
 	);
 
@@ -107,6 +108,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		$obj->DataObjectFieldName = $dataObjectFieldName;
 		$obj->FileClassName = $fileClassName;
 		$obj->ConnectionType = $connectionType;
+		$obj->IsLiveVersion = 0;
 		$obj->write();
 		if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
 			$obj = new MetaTagCMSControlFileUse();
@@ -114,6 +116,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$obj->DataObjectFieldName = $dataObjectFieldName;
 			$obj->FileClassName = $fileClassName;
 			$obj->ConnectionType = $connectionType;
+			$obj->IsLiveVersion = 1;
 			$obj->write();
 		}
 		DB::alteration_message("creating new MetaTagCMSControlFileUse: $dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType");
@@ -210,70 +213,75 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {
-					switch ($check->ConnectionType) {
-						case "HAS_ONE":
-							$objName = $check->DataObjectClassName;
-							$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
-							$innerJoinTable = "";
-							$innerJoinJoin = "";
-							break;
-						case "HAS_MANY":
-							$objName = $check->DataObjectClassName;
-							$where = "\"{$check->DataObjectClassName}\".\"ID\" = {$fileID}";
-							$innerJoinTable = "$check->FileClassName";
-							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"";
-							break;
-						case "BELONGS_MANY_MANY":
-							$objName = "";
-							$where = "";
-							$innerJoinTable = "";
-							$innerJoinJoin = "";
-							break;
-						case "MANY_MANY":
-							$objName = $check->DataObjectClassName;
-							$where = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->FileClassName}ID\" = $fileID";
-							$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
-							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"ID\" = \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
-							break;
-					}
-					$join = "";
-					if($innerJoinTable && $innerJoinJoin) {
-						$join = " INNER JOIN $innerJoinTable ON $innerJoinJoin ";
-					}
-					if($objName) {
-						$sort = null;
-						$limit = 1;
-						echo "<hr />";
-						echo "TYPE: ".$check->ConnectionType."<br />";
-						echo "CLASS: ".$objName."<br />";
-						echo "WHERE: ".$where."<br />";
-						echo "SORT: ".$sort."<br />";
-						echo "JOIN: ".$join."<br />";
-						echo "LIMIT: ".$limit."<br />";
-						echo "<hr />";
-						$objects = DataObject::get(
-							$objName,
-							$where,
-							$sort,
-							$join,
-							$limit
-						);
-						if($objects && $objects->count()) {
-							$obj = $objects->First();
-							$oldTitle = $file->Title;
-							$newTitle =  $obj->getTitle();
-							if((substr($newTitle, 0, 1) != "#") || (intval($newTitle) == $newTitle)) {
-								$file->Title = $newTitle;
-								$file->write();
-								DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
+					if(!$check->IsLiveVersion) {
+						switch ($check->ConnectionType) {
+							case "HAS_ONE":
+								$objName = $check->DataObjectClassName;
+								$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
+								$innerJoinTable = "";
+								$innerJoinJoin = "";
+								break;
+							case "HAS_MANY":
+								$objName = $check->DataObjectClassName;
+								$where = "\"{$check->DataObjectClassName}\".\"ID\" = {$fileID}";
+								$innerJoinTable = "$check->FileClassName";
+								$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"";
+								break;
+							case "BELONGS_MANY_MANY":
+								$objName = "";
+								$where = "";
+								$innerJoinTable = "";
+								$innerJoinJoin = "";
+								break;
+							case "MANY_MANY":
+								$objName = $check->DataObjectClassName;
+								$where = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->FileClassName}ID\" = $fileID";
+								$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
+								$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"ID\" = \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
+								break;
+						}
+						$join = "";
+						if($innerJoinTable && $innerJoinJoin) {
+							$join = " INNER JOIN $innerJoinTable ON $innerJoinJoin ";
+						}
+						if($objName) {
+							$sort = null;
+							$limit = 1;
+							echo "<hr />";
+							echo "TYPE: ".$check->ConnectionType."<br />";
+							echo "CLASS: ".$objName."<br />";
+							echo "WHERE: ".$where."<br />";
+							echo "SORT: ".$sort."<br />";
+							echo "JOIN: ".$join."<br />";
+							echo "LIMIT: ".$limit."<br />";
+							echo "<hr />";
+							$objects = DataObject::get(
+								$objName,
+								$where,
+								$sort,
+								$join,
+								$limit
+							);
+							if($objects && $objects->count()) {
+								$obj = $objects->First();
+								$oldTitle = $file->Title;
+								$newTitle =  $obj->getTitle();
+								if((substr($newTitle, 0, 1) != "#") || (intval($newTitle) == $newTitle)) {
+									$file->Title = $newTitle;
+									$file->write();
+									DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
+								}
+								else {
+									DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);
+								}
 							}
 							else {
-								DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);
+								DB::alteration_message("File <i>".$file->Title."</i> is not being used - SECOND CHECK", "deleted");
 							}
 						}
-						else {
-							DB::alteration_message("File <i>".$file->Title."</i> is not being used - SECOND CHECK", "deleted");
-						}
+					}
+					else {
+						DB::alteration_message("Skipping Live version <i>".$check->DataObjectClassName."</i>");
 					}
 				}
 			}
