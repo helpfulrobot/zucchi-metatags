@@ -219,7 +219,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 							break;
 						case "HAS_MANY":
 							$objName = $check->DataObjectClassName;
-							$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
+							$where = "\"{$check->DataObjectFieldName}\".\"ID\" = {$fileID}";
 							$innerJoinTable = "$check->FileClassName";
 							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"";
 							break;
@@ -244,6 +244,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						$sort = null;
 						$limit = 1;
 						echo "<hr />";
+						echo "TYPE: ".$check->ConnectionType."<br />";
 						echo "CLASS: ".$objName."<br />";
 						echo "WHERE: ".$where."<br />";
 						echo "SORT: ".$sort."<br />";
