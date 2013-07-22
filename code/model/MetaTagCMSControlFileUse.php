@@ -253,6 +253,8 @@ class MetaTagCMSControlFileUse extends DataObject {
 						$join = " INNER JOIN $innerJoinTable ON $innerJoinJoin ";
 					}
 					if($objName) {
+						$sort = null;
+						$limit = 1;
 						echo $objName."<hr />";
 						echo $where."<hr />";
 						echo $join."<hr />";
@@ -261,9 +263,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 						$objects = DataObject::get(
 							$objName,
 							$where,
-							$sort = null,
+							$sort,
 							$join,
-							$limit = 1
+							$limit
 						);
 						if($objects && $objects->count()) {
 							$obj = $objects->First();
