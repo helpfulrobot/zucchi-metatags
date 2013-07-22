@@ -3,7 +3,7 @@
 
 class MetaTagCMSControlFileUse extends DataObject {
 
-	protected static $file_usage_array = array();
+	private static $file_usage_array = array();
 
 	//database
 	public static $db = array(
@@ -168,6 +168,92 @@ class MetaTagCMSControlFileUse extends DataObject {
 						}
 						else {
 							self::$file_usage_array[$fileID] += $count;
+						}
+					}
+				}
+			}
+		}
+		return self::$file_usage_array[$fileID];
+	}
+
+	private static $fileSubStrings = array(
+		".jpg",
+		".png",
+		".jpeg",
+		".gif",
+		".JPG",
+		".PNG",
+		".JPEG",
+		".GIF"
+	);
+
+	public static function upgrade_file_names(){
+		$whereArray = array();
+		$whereArray[] = "\"Title\" = \"Name\"";
+		foreach(self::$fileSubStrings as $subString) {
+			$whereArray[] = "LOCATE('$subString', \"Title\") > 0";
+		}
+		$whereString =  "\"ClassName\" <> 'Folder' AND ( ".implode (" OR ", $whereArray)." )";
+		$files = DataObject::get("File", $whereString);
+		if($files && $files->count()) {
+			foreach($files as $file) {
+				DB::alteration_message("Updatinge file name for ".$file->Title);
+				$this->upgradeFileName($file);
+			}
+		}
+		else {
+			DB::alteration_message("All files have proper names", "created");
+		}
+	}
+
+	private function upgradeFileName(File $file) {
+		$fileID = $file->ID;
+		if(file_usage_count($fileID)) {
+			$checks = DataObject::get("MetaTagCMSControlFileUse");
+			if($checks && $checks->count()) {
+				foreach($checks as $check) {
+					switch ($check->ConnectionType) {
+						case "HAS_ONE":
+							$objName = $check->DataObjectClassName;
+							$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
+							$innerJoinTable = "";
+							$innerJoinJoin = "";
+							break;
+						case "HAS_MANY":
+							$objName = $check->DataObjectClassName;
+							$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
+							$innerJoinTable = "$check->FileClassName";
+							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"";
+							break;
+						case "BELONGS_MANY_MANY":
+
+							break;
+						case "MANY_MANY":
+							$objName = $check->DataObjectClassName;
+							$where = "\"{$check->FileClassName}ID\" = $fileID";
+							$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
+							$innerJoinJoin = "\"{$check->DataObjectClassName}.\"ID\" = (\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
+							break;
+					}
+					$join = "";
+					if($innerJoinTable && $innerJoinJoin) {
+						$join = " INNER JOIN $innerJoinTable ON $innerJoinJoin ";
+					}
+					$objects = DataObject::get(
+						$objName,
+						$where,
+						null,
+						$join,
+						$limit
+					);
+					if($objects && $objects->count()) {
+						$obj = $objects->First();
+						$oldTitle = $file->Title;
+						$newTitle =  $obj->getTitle();
+						if(substr($newTitle, 0, 1) != "#") {
+							$file->Title = $newTitle;
+							$file->write();
+							DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$obj->Title, "created");
 						}
 					}
 				}
