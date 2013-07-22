@@ -197,6 +197,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 	);
 
 	public static function upgrade_file_names(){
+		set_time_limit(60*10); // 10 minutes
 		$whereArray = array();
 		$whereArray[] = "\"Title\" = \"Name\"";
 		foreach(self::$file_sub_string as $subString) {
