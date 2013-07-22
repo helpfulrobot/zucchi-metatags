@@ -208,7 +208,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 
 	private static function upgrade_file_name(File $file) {
 		$fileID = $file->ID;
-		if(file_usage_count($fileID)) {
+		if(self::file_usage_count($fileID)) {
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {
@@ -253,11 +253,23 @@ class MetaTagCMSControlFileUse extends DataObject {
 						if(substr($newTitle, 0, 1) != "#") {
 							$file->Title = $newTitle;
 							$file->write();
-							DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$obj->Title, "created");
+							DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
 						}
+						else {
+							DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);
+						}
+					}
+					else {
+						DB::alteration_message("File <i>".$file-Title"</i> is not being used - SECOND CHECK", "deleted");
 					}
 				}
 			}
+			else {
+				DB::alteration_message("There are no checks", "deleted");
+			}
+		}
+		else {
+			DB::alteration_message("File <i>".$file->Title"</i> is not being used");
 		}
 		return self::$file_usage_array[$fileID];
 	}
