@@ -260,7 +260,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						}
 					}
 					else {
-						DB::alteration_message("File <i>".$file-Title"</i> is not being used - SECOND CHECK", "deleted");
+						DB::alteration_message("File <i>".$file-Title."</i> is not being used - SECOND CHECK", "deleted");
 					}
 				}
 			}
@@ -269,7 +269,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			}
 		}
 		else {
-			DB::alteration_message("File <i>".$file->Title"</i> is not being used");
+			DB::alteration_message("File <i>".$file->Title."</i> is not being used");
 		}
 		return self::$file_usage_array[$fileID];
 	}
