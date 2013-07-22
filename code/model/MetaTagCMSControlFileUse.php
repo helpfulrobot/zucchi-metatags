@@ -244,7 +244,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						$where,
 						null,
 						$join,
-						$limit
+						$limit = 1
 					);
 					if($objects && $objects->count()) {
 						$obj = $objects->First();
