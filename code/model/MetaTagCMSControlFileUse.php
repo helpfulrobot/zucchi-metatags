@@ -24,8 +24,6 @@ class MetaTagCMSControlFileUse extends DataObject {
 		DB::query("DELETE FROM \"MetaTagCMSControlFileUse\";");
 		//get all classes
 		$allClasses = ClassInfo::subclassesFor("DataObject");
-		//get all file classes
-		$fileClasses = ClassInfo::subclassesFor("File");
 		// files can have files attached to them so we have commented out the line below
 		//$allClassesExceptFiles = array_diff($allClasses, $fileClasses);
 		//lets go through class
@@ -40,15 +38,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			//lets inspect
 			if($hasOneArray && count($hasOneArray)) {
 				foreach($hasOneArray as $fieldName => $hasOneClass) {
-					if(in_array($hasOneClass, $fileClasses)) {
-						if(!DB::query("
-							SELECT COUNT(*)
-							FROM \"MetaTagCMSControlFileUse\"
-							WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$hasOneClass'
-						")->value()) {
-							$this->createNewRecord($class, $fieldName, $hasOneClass, "HAS_ONE");
-						}
-					}
+					$this->createNewRecord($class, $fieldName, $hasOneClass, "HAS_ONE");
 				}
 			}
 			$hasManyArray = null;
@@ -57,15 +47,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$hasManyArray = $newItems; //isset($hasManyArray) ? array_merge($newItems, (array)$hasManyArray) : $newItems;
 			if($hasManyArray && count($hasManyArray)) {
 				foreach($hasManyArray as $fieldName => $hasManyClass) {
-					if(in_array($hasManyClass, $fileClasses)) {
-						if(!DB::query("
-							SELECT COUNT(*)
-							FROM \"MetaTagCMSControlFileUse\"
-							WHERE \"DataObjectClassName\" = '$hasManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
-						")->value()) {
-							$this->createNewRecord($hasManyClass, $fieldName, $class, "HAS_MANY");
-						}
-					}
+					$this->createNewRecord($hasManyClass, $fieldName, $class, "HAS_MANY");
 				}
 			}
 			//many many
@@ -78,22 +60,8 @@ class MetaTagCMSControlFileUse extends DataObject {
 			//do both
 			if($manyManyArray && count($manyManyArray)) {
 				foreach($manyManyArray as $fieldName => $manyManyClass) {
-					if(in_array($manyManyClass, $fileClasses)) {
-						if(!DB::query("
-							SELECT COUNT(*)
-							FROM \"MetaTagCMSControlFileUse\"
-							WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$manyManyClass'
-						")->value()) {
-							$this->createNewRecord($class, $fieldName, $manyManyClass, "MANY_MANY");
-						}
-						if(!DB::query("
-							SELECT COUNT(*)
-							FROM \"MetaTagCMSControlFileUse\"
-							WHERE \"DataObjectClassName\" = '$manyManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
-						")->value()) {
-							$this->createNewRecord($manyManyClass, $fieldName, $class, "BELONGS_MANY_MANY");
-						}
-					}
+					$this->createNewRecord($class, $fieldName, $manyManyClass, "MANY_MANY");
+					$this->createNewRecord($manyManyClass, $fieldName, $class, "BELONGS_MANY_MANY");
 				}
 			}
 		}
@@ -103,23 +71,34 @@ class MetaTagCMSControlFileUse extends DataObject {
 		if(in_array($dataObjectClassName, self::$excluded_classes)  || in_array($fileClassName, self::$excluded_classes)) {
 			return;
 		}
-		$obj = new MetaTagCMSControlFileUse();
-		$obj->DataObjectClassName = $dataObjectClassName;
-		$obj->DataObjectFieldName = $dataObjectFieldName;
-		$obj->FileClassName = $fileClassName;
-		$obj->ConnectionType = $connectionType;
-		$obj->IsLiveVersion = 0;
-		$obj->write();
-		if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
+		//get all file classes
+		$fileClasses = ClassInfo::subclassesFor("File");
+		if( ! in_array($fileClassName, $fileClasses)) {
+			return;
+		}
+		if( ! DB::query("
+			SELECT COUNT(*)
+			FROM \"MetaTagCMSControlFileUse\"
+			WHERE \"DataObjectClassName\" = '$dataObjectClassName' AND  \"DataObjectFieldName\" = '$dataObjectFieldName' AND \"FileClassName\" = '$fileClassName'
+		")->value()) {
 			$obj = new MetaTagCMSControlFileUse();
-			$obj->DataObjectClassName = $dataObjectClassName."_Live";
+			$obj->DataObjectClassName = $dataObjectClassName;
 			$obj->DataObjectFieldName = $dataObjectFieldName;
 			$obj->FileClassName = $fileClassName;
 			$obj->ConnectionType = $connectionType;
-			$obj->IsLiveVersion = 1;
+			$obj->IsLiveVersion = 0;
 			$obj->write();
+			if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
+				$obj = new MetaTagCMSControlFileUse();
+				$obj->DataObjectClassName = $dataObjectClassName."_Live";
+				$obj->DataObjectFieldName = $dataObjectFieldName;
+				$obj->FileClassName = $fileClassName;
+				$obj->ConnectionType = $connectionType;
+				$obj->IsLiveVersion = 1;
+				$obj->write();
+			}
+			DB::alteration_message("creating new MetaTagCMSControlFileUse: $dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType");
 		}
-		DB::alteration_message("creating new MetaTagCMSControlFileUse: $dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType");
 	}
 
 	public static function file_usage_count($fileID, $quickBooleanCheck = false) {
@@ -209,7 +188,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 
 	private static function upgrade_file_name(File $file) {
 		$fileID = $file->ID;
-		if(self::file_usage_count($fileID)) {
+		if(self::file_usage_count($fileID, true)) {
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {
@@ -247,14 +226,16 @@ class MetaTagCMSControlFileUse extends DataObject {
 						if($objName) {
 							$sort = null;
 							$limit = 1;
-							echo "<hr />";
-							echo "TYPE: ".$check->ConnectionType."<br />";
-							echo "CLASS: ".$objName."<br />";
-							echo "WHERE: ".$where."<br />";
-							echo "SORT: ".$sort."<br />";
-							echo "JOIN: ".$join."<br />";
-							echo "LIMIT: ".$limit."<br />";
-							echo "<hr />";
+							if($this->debug) {
+								echo "<hr />";
+								echo "TYPE: ".$check->ConnectionType."<br />";
+								echo "CLASS: ".$objName."<br />";
+								echo "WHERE: ".$where."<br />";
+								echo "SORT: ".$sort."<br />";
+								echo "JOIN: ".$join."<br />";
+								echo "LIMIT: ".$limit."<br />";
+								echo "<hr />";
+							}
 							$objects = DataObject::get(
 								$objName,
 								$where,
@@ -276,7 +257,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 								}
 							}
 							else {
-								DB::alteration_message("File <i>".$file->Title."</i> is not being used - SECOND CHECK", "deleted");
+								echo ".";
 							}
 						}
 					}
