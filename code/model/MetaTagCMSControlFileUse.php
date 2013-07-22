@@ -176,7 +176,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		return self::$file_usage_array[$fileID];
 	}
 
-	private static $fileSubStrings = array(
+	private static $file_sub_string = array(
 		".jpg",
 		".png",
 		".jpeg",
@@ -190,7 +190,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 	public static function upgrade_file_names(){
 		$whereArray = array();
 		$whereArray[] = "\"Title\" = \"Name\"";
-		foreach(self::$fileSubStrings as $subString) {
+		foreach(self::$file_sub_string as $subString) {
 			$whereArray[] = "LOCATE('$subString', \"Title\") > 0";
 		}
 		$whereString =  "\"ClassName\" <> 'Folder' AND ( ".implode (" OR ", $whereArray)." )";
@@ -198,7 +198,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		if($files && $files->count()) {
 			foreach($files as $file) {
 				DB::alteration_message("Updatinge file name for ".$file->Title);
-				$this->upgradeFileName($file);
+				self::upgrade_file_name($file);
 			}
 		}
 		else {
@@ -206,7 +206,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 	}
 
-	private function upgradeFileName(File $file) {
+	private static function upgrade_file_name(File $file) {
 		$fileID = $file->ID;
 		if(file_usage_count($fileID)) {
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
