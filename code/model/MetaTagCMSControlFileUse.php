@@ -30,9 +30,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 		//lets go through class
 		foreach($allClasses as $class) {
 			if(in_array($class, self::$excluded_classes)) {
-
+				//do nothing
 			}
-				else {
+			else {
 				//HAS_ONE
 				$hasOneArray = null;
 				//get the has_one fields
@@ -49,20 +49,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 								FROM \"MetaTagCMSControlFileUse\"
 								WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$hasOneClass'
 							")->value()) {
-								$obj = new MetaTagCMSControlFileUse();
-								$obj->DataObjectClassName = $class;
-								$obj->DataObjectFieldName = $fieldName;
-								$obj->FileClassName = $hasOneClass;
-								$obj->ConnectionType = "HAS_ONE";
-								$obj->write();
-								if(ClassInfo::is_subclass_of($class, "SiteTree")) {
-									$obj = new MetaTagCMSControlFileUse();
-									$obj->DataObjectClassName = $class."_Live";
-									$obj->DataObjectFieldName = $fieldName;
-									$obj->FileClassName = $hasOneClass;
-									$obj->ConnectionType = "HAS_ONE";
-									$obj->write();
-								}
+								$this->createNewRecord($class, $fieldName, $hasOneClass, "HAS_ONE");
 							}
 						}
 					}
@@ -79,48 +66,35 @@ class MetaTagCMSControlFileUse extends DataObject {
 								FROM \"MetaTagCMSControlFileUse\"
 								WHERE \"DataObjectClassName\" = '$hasManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
 							")->value()) {
-								$obj = new MetaTagCMSControlFileUse();
-								$obj->DataObjectClassName = $hasManyClass;
-								$obj->DataObjectFieldName = $fieldName;
-								$obj->FileClassName = $class;
-								$obj->ConnectionType = "HAS_MANY";
-								$obj->write();
+								$this->createNewRecord($hasManyClass, $fieldName, $class, "HAS_MANY");
 							}
 						}
 					}
 				}
+				//many many
 				$manyManyArray = null;
 				$newItems = (array) Object::uninherited_static($class, 'many_many');
 				$manyManyArray = $newItems;
-
+				//belongs many many
 				$newItems = (array) Object::uninherited_static($class, 'belongs_many_many');
 				$manyManyArray = isset($manyManyArray) ? array_merge($newItems, $manyManyArray) : $newItems;
+				//do both
 				if($manyManyArray && count($manyManyArray)) {
 					foreach($manyManyArray as $fieldName => $manyManyClass) {
 						if(in_array($manyManyClass, $fileClasses)) {
 							if(!DB::query("
 								SELECT COUNT(*)
 								FROM \"MetaTagCMSControlFileUse\"
-								WHERE \"DataObjectClassName\" = '$manyManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$fieldName'
+								WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$manyManyClass'
 							")->value()) {
-								$obj = new MetaTagCMSControlFileUse();
-								$obj->DataObjectClassName = $class;
-								$obj->DataObjectFieldName = $fieldName;
-								$obj->FileClassName = $manyManyClass;
-								$obj->ConnectionType = "MANY_MANY";
-								$obj->write();
+								$this->createNewRecord($class, $fieldName, $manyManyClass, "MANY_MANY");
 							}
 							if(!DB::query("
 								SELECT COUNT(*)
 								FROM \"MetaTagCMSControlFileUse\"
 								WHERE \"DataObjectClassName\" = '$manyManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
 							")->value()) {
-								$obj = new MetaTagCMSControlFileUse();
-								$obj->DataObjectClassName = $manyManyClass;
-								$obj->DataObjectFieldName = $fieldName;
-								$obj->FileClassName = $class;
-								$obj->ConnectionType = "BELONGS_MANY_MANY";
-								$obj->write();
+								$this->createNewRecord($manyManyClass, $fieldName, $class, "BELONGS_MANY_MANY");
 							}
 						}
 					}
@@ -129,6 +103,23 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 	}
 
+	private function createNewRecord($dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType) {
+		$obj = new MetaTagCMSControlFileUse();
+		$obj->DataObjectClassName = $dataObjectClassName;
+		$obj->DataObjectFieldName = $dataObjectFieldName;
+		$obj->FileClassName = $fileClassName;
+		$obj->ConnectionType = $connectionType;
+		$obj->write();
+		if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
+			$obj = new MetaTagCMSControlFileUse();
+			$obj->DataObjectClassName = $dataObjectClassName."_Live";
+			$obj->DataObjectFieldName = $dataObjectFieldName;
+			$obj->FileClassName = $fileClassName;
+			$obj->ConnectionType = $connectionType;
+			$obj->write();
+		}
+		DB::alteration_message("creating new MetaTagCMSControlFileUse: $dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType");
+	}
 
 	public static function file_usage_count($fileID, $quickBooleanCheck = false) {
 		if(!isset(self::$file_usage_array[$fileID])) {
@@ -245,7 +236,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 							$objName = $check->DataObjectClassName;
 							$where = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->FileClassName}ID\" = $fileID";
 							$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
-							$innerJoinJoin = "\"{$check->DataObjectClassName}.\"ID\" = (\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
+							$innerJoinJoin = "\"{$check->DataObjectClassName}.\"ID\" = \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
 							break;
 					}
 					$join = "";
@@ -271,7 +262,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 							$obj = $objects->First();
 							$oldTitle = $file->Title;
 							$newTitle =  $obj->getTitle();
-							if(substr($newTitle, 0, 1) != "#") {
+							if((substr($newTitle, 0, 1) != "#") || (intval($newTitle) == $newTitle)) {
 								$file->Title = $newTitle;
 								$file->write();
 								DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
