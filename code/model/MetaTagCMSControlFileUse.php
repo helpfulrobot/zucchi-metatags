@@ -236,11 +236,14 @@ class MetaTagCMSControlFileUse extends DataObject {
 							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"";
 							break;
 						case "BELONGS_MANY_MANY":
-
+							$objName = "";
+							$where = "";
+							$innerJoinTable = "";
+							$innerJoinJoin = "";
 							break;
 						case "MANY_MANY":
 							$objName = $check->DataObjectClassName;
-							$where = "\"{$check->FileClassName}ID\" = $fileID";
+							$where = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->FileClassName}ID\" = $fileID";
 							$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
 							$innerJoinJoin = "\"{$check->DataObjectClassName}.\"ID\" = (\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
 							break;
@@ -249,33 +252,35 @@ class MetaTagCMSControlFileUse extends DataObject {
 					if($innerJoinTable && $innerJoinJoin) {
 						$join = " INNER JOIN $innerJoinTable ON $innerJoinJoin ";
 					}
-					$objects = DataObject::get(
-						$objName,
-						$where,
-						$sort = null,
-						$join,
-						$limit = 1
-					);
-					if($objects && $objects->count()) {
-						$obj = $objects->First();
-						$oldTitle = $file->Title;
-						$newTitle =  $obj->getTitle();
-						if(substr($newTitle, 0, 1) != "#") {
-							$file->Title = $newTitle;
-							$file->write();
-							DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
-						}
-						else {
-							DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);
-						}
-					}
-					else {
-						DB::alteration_message("File <i>".$file->Title."</i> is not being used - SECOND CHECK", "deleted");
+					if($objName) {
+						$objects = DataObject::get(
+							$objName,
+							$where,
+							$sort = null,
+							$join,
+							$limit = 1
+						);
 						echo $objName."<hr />";
 						echo $where."<hr />";
 						echo $join."<hr />";
 						echo $sort."<hr />";
 						echo $limit."<hr />";
+						if($objects && $objects->count()) {
+							$obj = $objects->First();
+							$oldTitle = $file->Title;
+							$newTitle =  $obj->getTitle();
+							if(substr($newTitle, 0, 1) != "#") {
+								$file->Title = $newTitle;
+								$file->write();
+								DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
+							}
+							else {
+								DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);
+							}
+						}
+						else {
+							DB::alteration_message("File <i>".$file->Title."</i> is not being used - SECOND CHECK", "deleted");
+						}
 					}
 				}
 			}
