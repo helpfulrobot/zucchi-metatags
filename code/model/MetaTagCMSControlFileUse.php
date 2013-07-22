@@ -29,73 +29,68 @@ class MetaTagCMSControlFileUse extends DataObject {
 		//$allClassesExceptFiles = array_diff($allClasses, $fileClasses);
 		//lets go through class
 		foreach($allClasses as $class) {
-			if(in_array($class, self::$excluded_classes)) {
-				//do nothing
+			//HAS_ONE
+			$hasOneArray = null;
+			//get the has_one fields
+			$newItems = (array) Object::uninherited_static($class, 'has_one');
+			// Validate the data
+			//do we need this?
+			$hasOneArray = $newItems; //isset($hasOneArray) ? array_merge($newItems, (array)$hasOneArray) : $newItems;
+			//lets inspect
+			if($hasOneArray && count($hasOneArray)) {
+				foreach($hasOneArray as $fieldName => $hasOneClass) {
+					if(in_array($hasOneClass, $fileClasses)) {
+						if(!DB::query("
+							SELECT COUNT(*)
+							FROM \"MetaTagCMSControlFileUse\"
+							WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$hasOneClass'
+						")->value()) {
+							$this->createNewRecord($class, $fieldName, $hasOneClass, "HAS_ONE");
+						}
+					}
+				}
 			}
-			else {
-				//HAS_ONE
-				$hasOneArray = null;
-				//get the has_one fields
-				$newItems = (array) Object::uninherited_static($class, 'has_one');
-				// Validate the data
-				//do we need this?
-				$hasOneArray = $newItems; //isset($hasOneArray) ? array_merge($newItems, (array)$hasOneArray) : $newItems;
-				//lets inspect
-				if($hasOneArray && count($hasOneArray)) {
-					foreach($hasOneArray as $fieldName => $hasOneClass) {
-						if(in_array($hasOneClass, $fileClasses)) {
-							if(!DB::query("
-								SELECT COUNT(*)
-								FROM \"MetaTagCMSControlFileUse\"
-								WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$hasOneClass'
-							")->value()) {
-								$this->createNewRecord($class, $fieldName, $hasOneClass, "HAS_ONE");
-							}
+			$hasManyArray = null;
+			$newItems = (array) Object::uninherited_static($class, 'has_many');
+			// Validate the data
+			$hasManyArray = $newItems; //isset($hasManyArray) ? array_merge($newItems, (array)$hasManyArray) : $newItems;
+			if($hasManyArray && count($hasManyArray)) {
+				foreach($hasManyArray as $fieldName => $hasManyClass) {
+					if(in_array($hasManyClass, $fileClasses)) {
+						if(!DB::query("
+							SELECT COUNT(*)
+							FROM \"MetaTagCMSControlFileUse\"
+							WHERE \"DataObjectClassName\" = '$hasManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
+						")->value()) {
+							$this->createNewRecord($hasManyClass, $fieldName, $class, "HAS_MANY");
 						}
 					}
 				}
-				$hasManyArray = null;
-				$newItems = (array) Object::uninherited_static($class, 'has_many');
-				// Validate the data
-				$hasManyArray = $newItems; //isset($hasManyArray) ? array_merge($newItems, (array)$hasManyArray) : $newItems;
-				if($hasManyArray && count($hasManyArray)) {
-					foreach($hasManyArray as $fieldName => $hasManyClass) {
-						if(in_array($hasManyClass, $fileClasses)) {
-							if(!DB::query("
-								SELECT COUNT(*)
-								FROM \"MetaTagCMSControlFileUse\"
-								WHERE \"DataObjectClassName\" = '$hasManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
-							")->value()) {
-								$this->createNewRecord($hasManyClass, $fieldName, $class, "HAS_MANY");
-							}
+			}
+			//many many
+			$manyManyArray = null;
+			$newItems = (array) Object::uninherited_static($class, 'many_many');
+			$manyManyArray = $newItems;
+			//belongs many many
+			$newItems = (array) Object::uninherited_static($class, 'belongs_many_many');
+			$manyManyArray = isset($manyManyArray) ? array_merge($newItems, $manyManyArray) : $newItems;
+			//do both
+			if($manyManyArray && count($manyManyArray)) {
+				foreach($manyManyArray as $fieldName => $manyManyClass) {
+					if(in_array($manyManyClass, $fileClasses)) {
+						if(!DB::query("
+							SELECT COUNT(*)
+							FROM \"MetaTagCMSControlFileUse\"
+							WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$manyManyClass'
+						")->value()) {
+							$this->createNewRecord($class, $fieldName, $manyManyClass, "MANY_MANY");
 						}
-					}
-				}
-				//many many
-				$manyManyArray = null;
-				$newItems = (array) Object::uninherited_static($class, 'many_many');
-				$manyManyArray = $newItems;
-				//belongs many many
-				$newItems = (array) Object::uninherited_static($class, 'belongs_many_many');
-				$manyManyArray = isset($manyManyArray) ? array_merge($newItems, $manyManyArray) : $newItems;
-				//do both
-				if($manyManyArray && count($manyManyArray)) {
-					foreach($manyManyArray as $fieldName => $manyManyClass) {
-						if(in_array($manyManyClass, $fileClasses)) {
-							if(!DB::query("
-								SELECT COUNT(*)
-								FROM \"MetaTagCMSControlFileUse\"
-								WHERE \"DataObjectClassName\" = '$class' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$manyManyClass'
-							")->value()) {
-								$this->createNewRecord($class, $fieldName, $manyManyClass, "MANY_MANY");
-							}
-							if(!DB::query("
-								SELECT COUNT(*)
-								FROM \"MetaTagCMSControlFileUse\"
-								WHERE \"DataObjectClassName\" = '$manyManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
-							")->value()) {
-								$this->createNewRecord($manyManyClass, $fieldName, $class, "BELONGS_MANY_MANY");
-							}
+						if(!DB::query("
+							SELECT COUNT(*)
+							FROM \"MetaTagCMSControlFileUse\"
+							WHERE \"DataObjectClassName\" = '$manyManyClass' AND  \"DataObjectFieldName\" = '$fieldName' AND \"FileClassName\" = '$class'
+						")->value()) {
+							$this->createNewRecord($manyManyClass, $fieldName, $class, "BELONGS_MANY_MANY");
 						}
 					}
 				}
@@ -104,6 +99,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 	}
 
 	private function createNewRecord($dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType) {
+		if(in_array($dataObjectClassName, self::$excluded_classes)  || in_array($fileClassName, self::$excluded_classes)) {
+			return;
+		}
 		$obj = new MetaTagCMSControlFileUse();
 		$obj->DataObjectClassName = $dataObjectClassName;
 		$obj->DataObjectFieldName = $dataObjectFieldName;
@@ -198,7 +196,6 @@ class MetaTagCMSControlFileUse extends DataObject {
 		$files = DataObject::get("File", $whereString);
 		if($files && $files->count()) {
 			foreach($files as $file) {
-				DB::alteration_message("Updatinge file name for ".$file->Title);
 				self::upgrade_file_name($file);
 			}
 		}
@@ -236,7 +233,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 							$objName = $check->DataObjectClassName;
 							$where = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->FileClassName}ID\" = $fileID";
 							$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
-							$innerJoinJoin = "\"{$check->DataObjectClassName}.\"ID\" = \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
+							$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"ID\" = \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
 							break;
 					}
 					$join = "";
@@ -246,11 +243,13 @@ class MetaTagCMSControlFileUse extends DataObject {
 					if($objName) {
 						$sort = null;
 						$limit = 1;
-						echo $objName."<hr />";
-						echo $where."<hr />";
-						echo $join."<hr />";
-						echo $sort."<hr />";
-						echo $limit."<hr />";
+						echo "<hr />";
+						echo "CLASS: ".$objName."<br />";
+						echo "WHERE: ".$where."<br />";
+						echo "SORT: ".$sort."<br />";
+						echo "JOIN: ".$join."<br />";
+						echo "LIMIT: ".$limit."<br />";
+						echo "<hr />";
 						$objects = DataObject::get(
 							$objName,
 							$where,
