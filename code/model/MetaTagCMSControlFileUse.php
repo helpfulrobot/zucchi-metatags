@@ -7,9 +7,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 
 	private static $file_usage_array = array();
 
-	private static $excluded_classes = array(
-		"SiteTree_ImageTracking"
-	);
+	private static $excluded_classes = array();
 
 	//database
 	public static $db = array(
@@ -17,7 +15,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"DataObjectFieldName" => "Varchar(255)",
 		"FileClassName" => "Varchar(255)",
 		"IsLiveVersion" => "Boolean",
-		"ConnectionType" => "Enum('HAS_ONE,HAS_MANY,MANY_MANY,BELONGS_MANY_MANY')"
+		"ConnectionType" => "Enum('DB,HAS_ONE,HAS_MANY,MANY_MANY,BELONGS_MANY_MANY')"
 	);
 
 	function requireDefaultRecords() {
@@ -26,10 +24,31 @@ class MetaTagCMSControlFileUse extends DataObject {
 		DB::query("DELETE FROM \"MetaTagCMSControlFileUse\";");
 		//get all classes
 		$allClasses = ClassInfo::subclassesFor("DataObject");
+		$siteTreeSubclasses = ClassInfo::subclassesFor("SiteTree");
 		// files can have files attached to them so we have commented out the line below
 		//$allClassesExceptFiles = array_diff($allClasses, $fileClasses);
 		//lets go through class
 		foreach($allClasses as $class) {
+
+			if(!in_array($class, $siteTreeSubclasses)) {
+				//DB
+				$dbArray = null;
+				//get the has_one fields
+				$newItems = (array) Object::uninherited_static($class, 'db');
+
+				// Validate the data
+				//do we need this?
+				$dbArray = $newItems; //isset($hasOneArray) ? array_merge($newItems, (array)$hasOneArray) : $newItems;
+				//lets inspect
+				if($dbArray && count($dbArray)) {
+					foreach($dbArray as $fieldName => $fieldType) {
+						if($fieldType == "HTMLText") {
+							$this->createNewRecord($class, $fieldName, "", "DB");
+						}
+					}
+				}
+			}
+
 			//HAS_ONE
 			$hasOneArray = null;
 			//get the has_one fields
@@ -43,6 +62,8 @@ class MetaTagCMSControlFileUse extends DataObject {
 					$this->createNewRecord($class, $fieldName, $hasOneClass, "HAS_ONE");
 				}
 			}
+
+			//HAS_MANY
 			$hasManyArray = null;
 			$newItems = (array) Object::uninherited_static($class, 'has_many');
 			// Validate the data
@@ -75,7 +96,10 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 		//get all file classes
 		$fileClasses = ClassInfo::subclassesFor("File");
-		if( ! in_array($fileClassName, $fileClasses)) {
+		if( ! in_array($fileClassName, $fileClasses) && $connectionType != "DB") {
+			return;
+		}
+		if($dataObjectFieldName == "ImageTracking") {
 			return;
 		}
 		if( ! DB::query("
@@ -103,9 +127,11 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 	}
 
-	public static function file_usage_count($fileID, $quickBooleanCheck = false) {
+	public static function file_usage_count($file, $quickBooleanCheck = false) {
+		$fileID = $file->ID;
 		if(!isset(self::$file_usage_array[$fileID])) {
 			self::$file_usage_array[$fileID] = 0;
+			//check for self-referencing (folders)
 			$sql = "SELECT COUNT(ID) FROM \"File\" WHERE \"ParentID\" = {$fileID};";
 			$result = DB::query($sql, false);
 			$childCount = $result->value();
@@ -113,11 +139,29 @@ class MetaTagCMSControlFileUse extends DataObject {
 				self::$file_usage_array[$fileID] = $childCount;
 				return self::$file_usage_array[$fileID];
 			}
+
+
+			//check for SiteTree_ImageTracking
+			$sql = "SELECT COUNT(ID) FROM \"SiteTree_ImageTracking\" WHERE \"FileID\" = {$fileID};";
+			$result = DB::query($sql, false);
+			$childCount = $result->value();
+			if($childCount) {
+				self::$file_usage_array[$fileID] = $childCount;
+			}
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
 			if($checks) {
 				foreach($checks as $check) {
 					$sql = "";
 					switch ($check->ConnectionType) {
+						case "DB":
+							$fileName = $file->Name;
+							$sql = "
+								SELECT IF(LOCATE('$fileName', \"{$check->DataObjectClassName}\".\"{$check->DataObjectFieldName}\") > 0, 1, 0) AS C
+								FROM \"{$check->DataObjectClassName}\"
+								ORDER BY C DESC
+								LIMIT 1;
+							";
+							break;
 						case "HAS_ONE":
 							$sql = "
 								SELECT COUNT(\"{$check->DataObjectClassName}\".\"ID\")
@@ -190,7 +234,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 
 	private static function upgrade_file_name(File $file) {
 		$fileID = $file->ID;
-		if(self::file_usage_count($fileID, true)) {
+		if(self::file_usage_count($file, true)) {
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {

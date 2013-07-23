@@ -20,6 +20,7 @@ Director::addRules(8, array(
 // dont forget to add $this->addBasicMetatagRequirements() to Page_Controller->init();
 // and add this to your Page.ss template file: $ExtendedMetatags
 //MUST SET ...
+//Object::add_extension('File', 'MetaTagFileExtension');
 //Object::add_extension('SiteConfig', 'MetaTagSiteConfigExtension');
 //Object::add_extension('SiteTree', 'MetaTagAutomation');
 //Object::add_extension('ContentController', 'MetaTagAutomation_controller');

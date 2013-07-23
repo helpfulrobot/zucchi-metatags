@@ -62,10 +62,13 @@ class MetaTagCMSControlFiles extends Controller {
 		if($fieldName = $request->param("ID")) {
 			if(in_array($fieldName, $this->updatableFields)) {
 				foreach($this->tableArray as $table) {
-					DB::query("UPDATE \"$table\" SET \"$fieldName\" = LOWER(\"$fieldName\")");
-					echo "UPDATE \"$table\" SET \"$fieldName\" = LOWER(\"$fieldName\")";
+					$items = DataObject::get($table, "BINARY \"$fieldName\" <> LOWER(\"$fieldName\")", "\"LastEdited\" ASC", null, 100);
+					if($items && $items->count()) {
+						$item->$fieldName = strtolower($item->$fieldName);
+						$item->write();
+					}
 				}
-				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.UPDATEDTOLOWERCASE", "Records updated to <i>lower case</i>"));
+				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.UPDATEDTOLOWERCASE", $items->count()." records updated to <i>lower case</i>, please repeat if you have more than 100 records."));
 				return $this->returnAjaxOrRedirectBack();
 			}
 		}
@@ -77,13 +80,14 @@ class MetaTagCMSControlFiles extends Controller {
 		if($fieldName = $request->param("ID")) {
 			if(in_array($fieldName, $this->updatableFields)) {
 				foreach($this->tableArray as $table) {
-					$rows = DB::query("SELECT \"ID\", \"$fieldName\" FROM \"$table\";");
-					foreach($rows as $row) {
-						$newValue = Convert::raw2sql($this->convert2TitleCase($row[$fieldName]));
-						DB::query("UPDATE \"$table\" SET \"$fieldName\" = '$newValue' WHERE ID = ".$row["ID"]);
+					$items = DataObject::get($table, null, "\"LastEdited\" ASC", null, 100);
+					if($items && $items->count()) {
+						$newValue = Convert::raw2sql($this->convert2TitleCase($item->$fieldName));
+						$item->$fieldName = $newValue;
+						$item->write();
 					}
 				}
-				Session::set("MetaTagCMSControlMessage", _t("MetaTagCMSControl.UPDATEDTOTITLECASE", "Records updated to <i>title case</i>"));
+				Session::set("MetaTagCMSControlMessage", _t("MetaTagCMSControl.UPDATEDTOTITLECASE", $items->count()." records updated to <i>title case</i>, please repeat if you have more than 100 records."));
 				return $this->returnAjaxOrRedirectBack();
 			}
 		}
@@ -95,9 +99,13 @@ class MetaTagCMSControlFiles extends Controller {
 		if($fieldName = $request->param("ID")) {
 			if(in_array($fieldName, $this->updatableFields)) {
 				foreach($this->tableArray as $table) {
-					DB::query("UPDATE \"$table\" SET \"$fieldName\" = \"Title\"");
+					$items = DataObject::get($table, "\"$fieldName\ <> \"Title\"", "\"LastEdited\" ASC", null, 100);
+					if($items && $items->count()) {
+						$item->$fieldName = $item->Title;
+						$item->write();
+					}
 				}
-				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.COPIEDFROMTITLE", "Copied from title."));
+				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.COPIEDFROMTITLE", $items->count()." records <i>copied from title</i>, please repeat if you have more than 100 records."));
 				return $this->returnAjaxOrRedirectBack();
 			}
 		}
@@ -200,7 +208,7 @@ class MetaTagCMSControlFiles extends Controller {
 				if(DataObject::get_one($this->tableArray[0], "ParentID = ".$file->ID)) {
 					$file->ChildrenLink = $this->createLevelLink($file->ID);
 				}
-				$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file->ID, false);
+				$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file, false);
 				if($file instanceOf Folder) {
 					$file->Type == "Folder";
 					$file->Icon == "metatags/images/Folder.png";
