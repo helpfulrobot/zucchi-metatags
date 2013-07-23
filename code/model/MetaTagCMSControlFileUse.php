@@ -3,6 +3,8 @@
 
 class MetaTagCMSControlFileUse extends DataObject {
 
+	private static $debug = false;
+
 	private static $file_usage_array = array();
 
 	private static $excluded_classes = array(
@@ -226,7 +228,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						if($objName) {
 							$sort = null;
 							$limit = 1;
-							if($this->debug) {
+							if(self::$debug) {
 								echo "<hr />";
 								echo "TYPE: ".$check->ConnectionType."<br />";
 								echo "CLASS: ".$objName."<br />";
