@@ -3,13 +3,28 @@
 
 class MetaTagCMSControlFileUse extends DataObject {
 
+	/**
+	 * debug data
+	 * @var Boolean
+	 */
 	private static $debug = false;
 
+	/**
+	 * keep data stored to reduce overhead
+	 * @var Array
+	 */
 	private static $file_usage_array = array();
 
+	/**
+	 * classes to exclude
+	 * @var Array
+	 */
 	private static $excluded_classes = array();
 
-	//database
+	/**
+	 * standard SS variable
+	 * @var Array
+	 */
 	public static $db = array(
 		"DataObjectClassName" => "Varchar(255)",
 		"DataObjectFieldName" => "Varchar(255)",
@@ -18,12 +33,16 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"ConnectionType" => "Enum('DB,HAS_ONE,HAS_MANY,MANY_MANY,BELONGS_MANY_MANY')"
 	);
 
+	/**
+	 * create a list of tables and fields that need to be checked
+	 */
 	function requireDefaultRecords() {
 		parent::requireDefaultRecords();
 		//start again
 		DB::query("DELETE FROM \"MetaTagCMSControlFileUse\";");
 		//get all classes
 		$allClasses = ClassInfo::subclassesFor("DataObject");
+		//classes from sitetree are linked through image tracker
 		$siteTreeSubclasses = ClassInfo::subclassesFor("SiteTree");
 		// files can have files attached to them so we have commented out the line below
 		//$allClassesExceptFiles = array_diff($allClasses, $fileClasses);
