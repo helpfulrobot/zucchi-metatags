@@ -62,6 +62,10 @@ class MetaTagFileExtension extends DataObjectDecorator {
 								$dom->loadHTML('<?xml encoding="UTF-8">'.$doToChange->$fieldName);
 								foreach ($dom->getElementsByTagName('img') as $node) {
 									$oldSrc = $node->getAttribute('src' );
+									$alt = $node->getAttribute('alt' );
+									if(!$alt) {
+										$node->setAttribute('alt', Convert::raw2att($this->owner->Title));
+									}
 									$newSrc = preg_replace('/'.str_replace("/", "\/", $oldPath).'(.*?)'.$oldFileName.'/', ''.$newPath.'$1'.$newFileName, $oldSrc);
 									if($oldSrc != $newSrc) {
 										$oldFilePath = Director::baseFolder()."/".$oldSrc;
@@ -72,7 +76,7 @@ class MetaTagFileExtension extends DataObjectDecorator {
 										$node->setAttribute('src', $newSrc);
 									}
 								}
-								$doToChange->encoding = 'UTF-8';
+								$dom->encoding = 'UTF-8';
 								$doToChange->$fieldName = $dom->saveHTML();
 								$data = preg_replace('/'.str_replace("/", "\/", $oldPath).'(.*?)'.$oldFileName.'/', ''.$newPath.'$1'.$newFileName, $doToChange->$fieldName);
 								//$this->owner->generateFormattedImage($format, $arg1, $arg2)

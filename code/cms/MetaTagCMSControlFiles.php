@@ -2,11 +2,15 @@
 
 class MetaTagCMSControlFiles extends Controller {
 
-	protected static $url_segment = 'metatagmanagementfiles';
+	private static $recycling_bin_name = 'ZzzeRecyclingBin';
+		static function set_recycling_bin_name($s){self::$recycling_bin_name = $s;}
+		static function get_recycling_bin_name(){return self::$recycling_bin_name;}
+
+	private static $url_segment = 'metatagmanagementfiles';
 		static function set_url_segment($s){self::$url_segment = $s;}
 		static function get_url_segment(){return self::$url_segment;}
 
-	protected static $records_per_page = 10;
+	private static $records_per_page = 10;
 		static function set_records_per_page($i){self::$records_per_page = $i;}
 		static function get_records_per_page(){return self::$records_per_page;}
 
@@ -156,7 +160,7 @@ class MetaTagCMSControlFiles extends Controller {
 	function recycle($request) {
 		$id = intval($request->param("ID"));
 		if($id) {
-			$folder = Folder::findOrMake("ZzzeRecyclingBin");
+			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 			if($folder) {
 				$file = DataObject::get_by_id("File", $id);
 				if($file) {

@@ -243,6 +243,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		$files = DataObject::get("File", $whereString);
 		if($files && $files->count()) {
 			foreach($files as $file) {
+				DB::alteration_message("Examining ".$file->Title);
 				self::upgrade_file_name($file);
 			}
 		}
@@ -331,7 +332,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						}
 					}
 					else {
-						DB::alteration_message("Skipping Live version <i>".$check->DataObjectClassName."</i>");
+						echo "-";
 					}
 				}
 			}
@@ -341,6 +342,11 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 		else {
 			DB::alteration_message("File <i>".$file->Title."</i> is not being used");
+			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+			if($folder) {
+				$file->ParentID = $folder->ID;
+				$file->write();
+			}
 		}
 		return self::$file_usage_array[$fileID];
 	}
