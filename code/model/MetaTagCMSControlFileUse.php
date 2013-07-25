@@ -232,7 +232,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		".GIF"
 	);
 
-	public static function recylcle_files(){
+	public static function recylcle_files($verbose = true){
 		set_time_limit(60*10); // 10 minutes
 		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 		if($folder) {
@@ -240,29 +240,31 @@ class MetaTagCMSControlFileUse extends DataObject {
 			if($files && $files->count()) {
 				foreach($files as $file) {
 					if(self::file_usage_count($file, true)) {
-						DB::alteration_message($file->Title." is in use. No action taken.", "created");
+						if($verbose) {DB::alteration_message($file->Title." is in use. No action taken.", "created");}
 					}
 					else {
-						if(MetaTagCMSControlFileUse_RecyclingRecord::recycle($file)) {
-							DB::alteration_message($file->Title." recycled", "edited");
+						if(MetaTagCMSControlFileUse_RecyclingRecord::recycle($file, $verbose)) {
+							if($verbose) {DB::alteration_message($file->Title." recycled", "edited");}
 						}
 						else {
-							DB::alteration_message("Could not recycle file: ".$file->ID.'-'.$file->Title, "deleted");
+							if($verbose) {DB::alteration_message("Could not recycle file: ".$file->ID.'-'.$file->Title, "deleted");}
 						}
 					}
 				}
 			}
 			else {
-				DB::alteration_message("There are no files to recycle", "created");
+				if($verbose) {DB::alteration_message("There are no files to recycle", "created");}
 			}
 		}
 		else {
-			DB::alteration_message("Could not create recycling bin", "deleted");
+			if($verbose) {
+				DB::alteration_message("Could not create recycling bin", "deleted");
+			}
 		}
 	}
 
 
-	public static function upgrade_file_names(){
+	public static function upgrade_file_names($verbose = true){
 		set_time_limit(60*10); // 10 minutes
 		$whereArray = array();
 		$whereArray[] = "\"Title\" = \"Name\"";
@@ -277,16 +279,20 @@ class MetaTagCMSControlFileUse extends DataObject {
 		$files = DataObject::get("File", $whereString);
 		if($files && $files->count()) {
 			foreach($files as $file) {
-				DB::alteration_message("Examining ".$file->Title);
-				self::upgrade_file_name($file);
+				if($verbose) {
+					DB::alteration_message("Examining ".$file->Title);
+				}
+				self::upgrade_file_name($file, $verbose);
 			}
 		}
 		else {
-			DB::alteration_message("All files have proper names", "created");
+			if($verbose) {
+				DB::alteration_message("All files have proper names", "created");
+			}
 		}
 	}
 
-	private static function upgrade_file_name(File $file) {
+	private static function upgrade_file_name(File $file, $verbose = true) {
 		$fileID = $file->ID;
 		if(self::file_usage_count($file, true)) {
 			$checks = DataObject::get("MetaTagCMSControlFileUse");
@@ -354,31 +360,31 @@ class MetaTagCMSControlFileUse extends DataObject {
 								if((substr($newTitle, 0, 1) != "#") || (intval($newTitle) == $newTitle)) {
 									$file->Title = $newTitle;
 									$file->write();
-									DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");
+									if($verbose) {DB::alteration_message("Updating ".$file->Name." title from ".$oldTitle." to ".$newTitle, "created");}
 								}
 								else {
-									DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);
+									if($verbose) {DB::alteration_message("There is no real title for ".$obj->ClassName.": ".$newTitle);}
 								}
 							}
 							else {
-								echo ".";
+								if($verbose) {echo ".";}
 							}
 						}
 						else {
-							echo ";";
+							if($verbose) {echo ";";}
 						}
 					}
 					else {
-						echo "-";
+						if($verbose) {echo "-";}
 					}
 				}
 			}
 			else {
-				DB::alteration_message("There are no checks", "deleted");
+				if($verbose) {DB::alteration_message("There are no checks", "deleted");}
 			}
 		}
 		else {
-			DB::alteration_message("File <i>".$file->Title."</i> is not being used");
+			if($verbose) {DB::alteration_message("File <i>".$file->Title."</i> is not being used");}
 		}
 		return self::$file_usage_array[$fileID];
 	}
@@ -393,7 +399,7 @@ class MetaTagCMSControlFileUse_RecyclingRecord extends DataObject {
 		"FromFolderID" => "Int"
 	);
 
-	public static function recycle(File $file) {
+	public static function recycle(File $file, $verbose = true) {
 		$recylcingFolder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 		if($recylcingFolder) {
 			if($file) {

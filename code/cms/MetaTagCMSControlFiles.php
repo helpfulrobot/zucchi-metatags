@@ -110,7 +110,7 @@ class MetaTagCMSControlFiles extends Controller {
 	}
 
 	function recycleall($request) {
-		if($count = MetaTagCMSControlFileUse::upgrade_file_names(false)) {
+		if($count = MetaTagCMSControlFileUse::recylcle_files(false)) {
 			Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESUPDATED", "Updated $count file names."));
 			return $this->returnAjaxOrRedirectBack();
 		}
