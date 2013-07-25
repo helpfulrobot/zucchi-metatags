@@ -160,20 +160,10 @@ class MetaTagCMSControlFiles extends Controller {
 	function recycle($request) {
 		$id = intval($request->param("ID"));
 		if($id) {
-			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
-			if($folder) {
-				$file = DataObject::get_by_id("File", $id);
-				if($file) {
-					if(file_exists($file->getFullPath())) {
-						$file->ParentID = $folder->ID;
-						$file->write();
-						Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.FILERECYCLED", "File &quot;".$file->Title."&quot; has been recycled."));
-						return $this->returnAjaxOrRedirectBack();
-					}
-					else {
-						$file->delete();
-					}
-				}
+			$file = DataObject::get_by_id("File", $id);
+			if(MetaTagCMSControlFileUse_RecyclingRecord::recycle($file)) {
+				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.FILERECYCLED", "File &quot;".$file->Title."&quot; has been recycled."));
+				return $this->returnAjaxOrRedirectBack();
 			}
 		}
 		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.FILENOTRECYCLED", "ERROR: File &quot;".$file->Title."&quot; could NOT be recycled."));

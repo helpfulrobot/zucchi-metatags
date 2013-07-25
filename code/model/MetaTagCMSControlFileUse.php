@@ -232,6 +232,36 @@ class MetaTagCMSControlFileUse extends DataObject {
 		".GIF"
 	);
 
+	public static function recylcle_files(){
+		set_time_limit(60*10); // 10 minutes
+		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+		if($folder) {
+			$files = DataObject::get("File", " ParentID <> ".$folder->ID);
+			if($files && $files->count()) {
+				foreach($files as $file) {
+					if(self::file_usage_count($file, true)) {
+						DB::alteration_message($file->Title." is in use. No action taken.", "created");
+					}
+					else {
+						if(MetaTagCMSControlFileUse_RecyclingRecord::recycle($file)) {
+							DB::alteration_message($file->Title." recycled", "edited");
+						}
+						else {
+							DB::alteration_message("Could not recycle file: ".$file->ID.'-'.$file->Title, "deleted");
+						}
+					}
+				}
+			}
+			else {
+				DB::alteration_message("There are no files to recycle", "created");
+			}
+		}
+		else {
+			DB::alteration_message("Could not create recycling bin", "deleted");
+		}
+	}
+
+
 	public static function upgrade_file_names(){
 		set_time_limit(60*10); // 10 minutes
 		$whereArray = array();
@@ -253,44 +283,6 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 		else {
 			DB::alteration_message("All files have proper names", "created");
-		}
-	}
-
-	public static function recylcle_files(){
-		set_time_limit(60*10); // 10 minutes
-		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
-		if($folder) {
-			$whereString .= " ParentID <> ".$folder->ID;
-			$files = DataObject::get("File", $whereString);
-			if($files && $files->count()) {
-				foreach($files as $file) {
-					DB::alteration_message("Examining ".$file->Title);
-					if(self::file_usage_count($file, true)) {
-						//DP NOTHING
-					}
-					else {
-						if($file->exists()) {
-							$file->ParentID = $folder->ID;
-							$valid = $file->validate();
-							if($valid->valid()) {
-								$file->write();
-							}
-							else {
-								DB::alteration_message("File not valid: ".$file->ID."-".$file->Title, "deleted");
-							}
-						}
-						else {
-							DB::alteration_message("File does not exist: ".$file->ID."-".$file->Title, "deleted");
-						}
-					}
-				}
-			}
-			else {
-				DB::alteration_message("There are no files to recycle", "deleted");
-			}
-		}
-		else {
-			DB::alteration_message("Could not create recycling bin", "deleted");
 		}
 	}
 
@@ -394,4 +386,36 @@ class MetaTagCMSControlFileUse extends DataObject {
 }
 
 
+class MetaTagCMSControlFileUse_RecyclingRecord extends DataObject {
+
+	static $db = array(
+		"FileID" => "Int",
+		"FromFolderID" => "Int"
+	);
+
+	public static function recycle(File $file) {
+		$recylcingFolder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+		if($recylcingFolder) {
+			if($file) {
+				if($file->exists()) {
+					if(file_exists($file->getFullPath())) {
+						$valid = $file->validate();
+						if($valid->valid()) {
+							$record = new MetaTagCMSControlFileUse_RecyclingRecord();
+							$record->FileID = $file->ID;
+							$record->FromFolderID = $file->ParentID;
+							$record->write();
+							//doing it.....
+							$file->ParentID = $recylcingFolder->ID;
+							$file->write();
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+}
 
