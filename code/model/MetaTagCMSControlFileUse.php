@@ -258,6 +258,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {
 					if(!$check->IsLiveVersion) {
+						$objName = "";
 						switch ($check->ConnectionType) {
 							case "HAS_ONE":
 								$objName = $check->DataObjectClassName;
@@ -324,6 +325,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 							else {
 								echo ".";
 							}
+						}
+						else {
+							echo ";";
 						}
 					}
 					else {
