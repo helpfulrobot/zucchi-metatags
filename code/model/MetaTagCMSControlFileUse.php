@@ -232,11 +232,11 @@ class MetaTagCMSControlFileUse extends DataObject {
 		".GIF"
 	);
 
-	public static function recylcle_files($verbose = true){
+	public static function recycle_folder($folderID = 0, $verbose = true){
 		set_time_limit(60*10); // 10 minutes
-		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
-		if($folder) {
-			$files = DataObject::get("File", " ParentID <> ".$folder->ID);
+		$recyclefolder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+		if($recyclefolder) {
+			$files = DataObject::get("File", " ParentID <> ".$recyclefolder->ID." AND ParentID = ".$folderID);
 			if($files && $files->count()) {
 				foreach($files as $file) {
 					if(self::file_usage_count($file, true)) {
@@ -257,9 +257,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			}
 		}
 		else {
-			if($verbose) {
-				DB::alteration_message("Could not create recycling bin", "deleted");
-			}
+			if($verbose) {DB::alteration_message("Could not create recycling folder", "deleted");}
 		}
 	}
 
