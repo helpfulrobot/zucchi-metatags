@@ -264,6 +264,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 				foreach($checks as $check) {
 					if(!$check->IsLiveVersion) {
 						$objName = "";
+						$where = "";
+						$innerJoinTable = "";
+						$innerJoinJoin = "";
 						switch ($check->ConnectionType) {
 							case "HAS_ONE":
 								$objName = $check->DataObjectClassName;
