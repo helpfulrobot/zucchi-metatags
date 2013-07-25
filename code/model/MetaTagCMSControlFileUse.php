@@ -351,13 +351,18 @@ class MetaTagCMSControlFileUse extends DataObject {
 			DB::alteration_message("File <i>".$file->Title."</i> is not being used, moving it to recycled!", "created");
 			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 			if($folder) {
-				$file->ParentID = $folder->ID;
-				$valid = $file->validate();
-				if($valid->valid()) {
-					$file->write();
+				if($file->exists()) {
+					$file->ParentID = $folder->ID;
+					$valid = $file->validate();
+					if($valid->valid()) {
+						$file->write();
+					}
+					else {
+						DB::alteration_message("File not valid: ".$file->ID."-".$file->Title, "deleted");
+					}
 				}
 				else {
-					DB::alteration_message("File not valid ".$file->ID."-".$file->Title, "deleted");
+					DB::alteration_message("File does not exist: ".$file->ID."-".$file->Title, "deleted");
 				}
 			}
 		}
