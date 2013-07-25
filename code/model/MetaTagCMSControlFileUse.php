@@ -256,6 +256,44 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 	}
 
+	public static function recylcle_files(){
+		set_time_limit(60*10); // 10 minutes
+		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+		if($folder) {
+			$whereString .= " ParentID <> ".$folder->ID;
+			$files = DataObject::get("File", $whereString);
+			if($files && $files->count()) {
+				foreach($files as $file) {
+					DB::alteration_message("Examining ".$file->Title);
+					if(self::file_usage_count($file, true)) {
+						//DP NOTHING
+					}
+					else {
+						if($file->exists()) {
+							$file->ParentID = $folder->ID;
+							$valid = $file->validate();
+							if($valid->valid()) {
+								$file->write();
+							}
+							else {
+								DB::alteration_message("File not valid: ".$file->ID."-".$file->Title, "deleted");
+							}
+						}
+						else {
+							DB::alteration_message("File does not exist: ".$file->ID."-".$file->Title, "deleted");
+						}
+					}
+				}
+			}
+			else {
+				DB::alteration_message("There are no files to recycle", "deleted");
+			}
+		}
+		else {
+			DB::alteration_message("Could not create recycling bin", "deleted");
+		}
+	}
+
 	private static function upgrade_file_name(File $file) {
 		$fileID = $file->ID;
 		if(self::file_usage_count($file, true)) {
@@ -348,23 +386,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			}
 		}
 		else {
-			DB::alteration_message("File <i>".$file->Title."</i> is not being used, moving it to recycled!", "created");
-			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
-			if($folder) {
-				if($file->exists()) {
-					$file->ParentID = $folder->ID;
-					$valid = $file->validate();
-					if($valid->valid()) {
-						$file->write();
-					}
-					else {
-						DB::alteration_message("File not valid: ".$file->ID."-".$file->Title, "deleted");
-					}
-				}
-				else {
-					DB::alteration_message("File does not exist: ".$file->ID."-".$file->Title, "deleted");
-				}
-			}
+			DB::alteration_message("File <i>".$file->Title."</i> is not being used");
 		}
 		return self::$file_usage_array[$fileID];
 	}
