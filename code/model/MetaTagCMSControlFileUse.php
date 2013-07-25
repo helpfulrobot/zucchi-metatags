@@ -352,7 +352,13 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 			if($folder) {
 				$file->ParentID = $folder->ID;
-				$file->write();
+				$valid = $file->validate();
+				if($valid->valid()) {
+					$file->write();
+				}
+				else {
+					DB::alteration_message("File not valid ".$file->ID."-".$file->Title, "deleted");
+				}
 			}
 		}
 		return self::$file_usage_array[$fileID];
