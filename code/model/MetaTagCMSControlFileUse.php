@@ -240,6 +240,10 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$whereArray[] = "LOCATE('$subString', \"Title\") > 0";
 		}
 		$whereString =  "\"ClassName\" <> 'Folder' AND ( ".implode (" OR ", $whereArray)." )";
+		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+		if($folder) {
+			$whereString .= " AND ParentID <> ".$folder->ID;
+		}
 		$files = DataObject::get("File", $whereString);
 		if($files && $files->count()) {
 			foreach($files as $file) {
@@ -341,7 +345,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			}
 		}
 		else {
-			DB::alteration_message("File <i>".$file->Title."</i> is not being used");
+			DB::alteration_message("File <i>".$file->Title."</i> is not being used, moving it to recycled!", "created");
 			$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 			if($folder) {
 				$file->ParentID = $folder->ID;
