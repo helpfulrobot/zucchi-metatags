@@ -99,6 +99,26 @@ class MetaTagCMSControlFiles extends Controller {
 		return $this->returnAjaxOrRedirectBack();
 	}
 
+
+	function updatefilenames($request) {
+		if($count = MetaTagCMSControlFileUse::upgrade_file_names(false)) {
+			Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESUPDATED", "Updated $count file names."));
+			return $this->returnAjaxOrRedirectBack();
+		}
+		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESNOTUPDATED", "ERROR: Did not update any file names"));
+		return $this->returnAjaxOrRedirectBack();
+	}
+
+	function recycleallfiles($request) {
+		if($count = MetaTagCMSControlFileUse::upgrade_file_names(false)) {
+			Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESUPDATED", "Updated $count file names."));
+			return $this->returnAjaxOrRedirectBack();
+		}
+		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESNOTUPDATED", "ERROR: Did not update any file names"));
+		return $this->returnAjaxOrRedirectBack();
+	}
+
+
 	function copyfromtitle($request){
 		if($fieldName = $request->param("ID")) {
 			if(in_array($fieldName, $this->updatableFields)) {
