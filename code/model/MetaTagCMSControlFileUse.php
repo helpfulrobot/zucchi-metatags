@@ -233,6 +233,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 	);
 
 	public static function recycle_folder($folderID = 0, $verbose = true){
+		$count = 0;
 		set_time_limit(60*10); // 10 minutes
 		$recyclefolder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
 		if($recyclefolder) {
@@ -245,6 +246,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 					else {
 						if(MetaTagCMSControlFileUse_RecyclingRecord::recycle($file, $verbose)) {
 							if($verbose) {DB::alteration_message($file->Title." recycled", "edited");}
+							$count++;
 						}
 						else {
 							if($verbose) {DB::alteration_message("Could not recycle file: ".$file->ID.'-'.$file->Title, "deleted");}
@@ -259,6 +261,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		else {
 			if($verbose) {DB::alteration_message("Could not create recycling folder", "deleted");}
 		}
+		return $count;
 	}
 
 

@@ -112,11 +112,11 @@ class MetaTagCMSControlFiles extends Controller {
 	function recyclefolder($request) {
 		if($folderID = intval($request->param("ID"))) {
 			if($count = MetaTagCMSControlFileUse::recycle_folder($folderID, false)) {
-				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESUPDATED", "Updated $count file names."));
+				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.RECYCLED_FILES", "Recycled unused files in this folder."));
 				return $this->returnAjaxOrRedirectBack();
 			}
 		}
-		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESNOTUPDATED", "ERROR: Did not update any file names"));
+		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.DID_NOT_RECYCLE_FILES", "ERROR: Could not recycle all files"));
 		return $this->returnAjaxOrRedirectBack();
 	}
 
