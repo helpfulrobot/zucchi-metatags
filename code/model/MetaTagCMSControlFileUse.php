@@ -225,7 +225,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 								FROM \"{$check->DataObjectClassName}\"
 									INNER JOIN  {$check->FileClassName}
 										ON \"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"
-								WHERE \"{$check->DataObjectClassName}\".\"ID\" = {$fileID};
+								WHERE \"{$check->FileClassName}\".\"ID\" = {$fileID};
 							";
 							if($saveListOfPlaces) {
 								$sqlListOfPlaces = "
@@ -233,7 +233,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 									FROM \"{$check->DataObjectClassName}\"
 										INNER JOIN  {$check->FileClassName}
 											ON \"{$check->DataObjectClassName}\".\"{$check->FileClassName}ID\" = \"{$check->FileClassName}\".\"ID\"
-									WHERE \"{$check->DataObjectClassName}\".\"ID\" = {$fileID};
+									WHERE \"{$check->FileClassName}\".\"ID\" = {$fileID};
 								";
 								$objectNameListOfPlaces = $check->DataObjectClassName;
 							}
@@ -247,7 +247,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 							";
 							if($saveListOfPlaces) {
 								$sqlListOfPlaces = "
-									SELECT \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"  AS MyID
+									SELECT \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->DataObjectClassName}ID\"  AS MyID
 									FROM \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\"
 									WHERE \"{$check->FileClassName}ID\" = $fileID;
 								";
