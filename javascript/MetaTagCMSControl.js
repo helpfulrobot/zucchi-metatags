@@ -54,11 +54,12 @@ var MetaTagCMSControl = {
 		jQuery("a.ajaxify").click(
 			function(event) {
 				event.preventDefault();
-				jQuery('tbody').fadeTo("fast", "0.5");
+				jQuery('tbody').fadeTo("fast", "0.2");
 				var url = jQuery(this).attr("href");
 				jQuery.get(
 					url,
 					function(data) {
+						alert("updated");
 						jQuery('tbody').html(data);
 						jQuery('.response').text("records updated ....");
 						jQuery('tbody').fadeTo(
@@ -86,7 +87,7 @@ var MetaTagCMSControl = {
 		// jqForm is a jQuery object encapsulating the form element.  To access the
 		// DOM element for the form do shiothis:
 		// var formElement = jqForm[0];
-		//alert('About to submit: \n\n' + queryString);
+		alert('About to submit: \n\n' + queryString);
 		return true;
 	},
 
@@ -103,7 +104,7 @@ var MetaTagCMSControl = {
 		// property set to 'json' then the first argument to the success callback
 		// is the json data object returned by the server
 
-		//alert('status: ' + statusText + '\n\nresponseText: \n' + responseText + '\n\nThe output div should have already been updated with the responseText.');
+		alert('status: ' + statusText + '\n\nresponseText: \n' + responseText + '\n\nThe output div should have already been updated with the responseText.');
 	},
 
 	fixSerialize: function ($form, options) {

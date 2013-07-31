@@ -97,7 +97,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$hasManyArray = $newItems; //isset($hasManyArray) ? array_merge($newItems, (array)$hasManyArray) : $newItems;
 			if($hasManyArray && count($hasManyArray)) {
 				foreach($hasManyArray as $fieldName => $hasManyClass) {
-					$this->createNewRecord($hasManyClass, $fieldName, $class, "HAS_MANY");
+					$this->createNewRecord($class, $fieldName, $hasManyClass, "HAS_MANY");
 				}
 			}
 			//many many
@@ -265,6 +265,8 @@ class MetaTagCMSControlFileUse extends DataObject {
 							if($saveListOfPlaces) {
 								if( ! $checks->IsLiveVersion) {
 									self::list_of_places_adder($fileID, $sqlListOfPlaces, $objectNameListOfPlaces);
+									$sqlListOfPlaces = "";
+									$objectNameListOfPlaces = "";
 								}
 							}
 							self::$file_usage_array[$fileID] += $count;
