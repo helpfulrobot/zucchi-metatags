@@ -224,10 +224,16 @@ class MetaTagCMSControlFiles extends Controller {
 				if(DataObject::get_one($this->tableArray[0], "ParentID = ".$file->ID)) {
 					$file->ChildrenLink = $this->createLevelLink($file->ID);
 				}
-				$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file, false);
+				$file->UsageCount = MetaTagCMSControlFileUse::file_usage_count($file, false, $saveListOfPlaces = true);
 				if($file instanceOf Folder) {
 					$file->Type == "Folder";
 					$file->Icon == "metatags/images/Folder.png";
+				}
+				elseif($file->UsageCount) {
+					$file->ListOfPlaces = MetaTagCMSControlFileUse::retrieve_list_of_places($file->ID);
+				}
+				if(!$file->ListOfPlaces) {
+					unset($file->ListOfPlaces);
 				}
 				$file->GoOneUpLink = $this->GoOneUpLink();
 				$file->RecycleLink = $this->makeRecycleLink($file->ID);
