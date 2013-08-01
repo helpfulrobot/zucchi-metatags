@@ -539,6 +539,13 @@ class MetaTagCMSControlFileUse_RecyclingRecord extends DataObject {
 							return true;
 						}
 					}
+					else {
+						$record = new MetaTagCMSControlFileUse_RecyclingRecord();
+						$record->FileID = $file->ID;
+						$record->FromFolderID = 0;
+						$record->write();
+						$file->delete();
+					}
 				}
 			}
 		}
