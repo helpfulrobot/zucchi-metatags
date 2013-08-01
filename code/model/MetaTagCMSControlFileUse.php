@@ -263,7 +263,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						}
 						else {
 							if($saveListOfPlaces) {
-								if( ! $checks->IsLiveVersion) {
+								if( ! $check->IsLiveVersion) {
 									self::list_of_places_adder($fileID, $sqlListOfPlaces, $objectNameListOfPlaces);
 									$sqlListOfPlaces = "";
 									$objectNameListOfPlaces = "";
