@@ -2,35 +2,36 @@
 
 class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 
-	protected static $url_segment = "metatagmanagementpages";
-		static function get_url_segment(){return self::$url_segment;}
-		static function set_url_segment($s){self::$url_segment = $s;}
 
 	/***************************************************
 	 * CONFIG                                          *
 	 *                                                 *
 	 ***************************************************/
 
+	protected static $url_segment = 'metatagmanagementpages';
+		static function set_url_segment($s){self::$url_segment = $s;}
+		static function get_url_segment(){return self::$url_segment;}
+
 	protected static $small_words_array = array('of','a','the','and','an','or','nor','but','is','if','then','else','when','at','from','by','on','off','for','in','out','over','to','into','with');
 		static function set_small_words_array($a){self::$small_words_array = $a;}
 		static function get_small_words_array(){return self::$small_words_array;}
 
 	protected $updatableFields = array(
-		'Title',
-		'MetaTitle',
-		'MenuTitle',
-		'MetaDescription',
-		'UpdateMenuTitle',
-		'UpdateMetaTitle',
-		'UpdateMetaDescription',
-		'AutomateMetatags'
+		"Title",
+		"MetaTitle",
+		"MenuTitle",
+		"MetaDescription",
+		"UpdateMenuTitle",
+		"UpdateMetaTitle",
+		"UpdateMetaDescription",
+		"AutomateMetatags"
 	);
 
 	/**
 	 * First table is main table - e.g. $this->tableArray[0] should work
 	 *
 	 **/
-	protected $tableArray = array('SiteTree', 'SiteTree_Live');
+	protected $tableArray = array("SiteTree", "SiteTree_Live");
 
 
 	/***************************************************
@@ -40,7 +41,7 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 
 
 	function index() {
-		return $this->renderWith('MetaTagCMSControlPages');
+		return $this->renderWith("MetaTagCMSControlPages");
 	}
 
 
@@ -50,7 +51,7 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 				foreach($this->tableArray as $table) {
 					$rows = DB::query("SELECT \"$table\".\"ID\", \"$table\".\"Content\" FROM \"$table\" WHERE \"$table\".\"$fieldName\" = '' OR \"$table\".\"$fieldName\" IS NULL;");
 					foreach($rows as $row) {
-						$newValue = Convert::raw2sql(DBField::create_field("HTMLText", $row["Content"])->Summary(MetaTagsSTE::$meta_desc_length, 15, ""));
+						$newValue = Convert::raw2sql(DBField::create("HTMLText", $row["Content"])->Summary(MetaTagAutomation::get_meta_desc_length(), 15, ""));
 						DB::query("UPDATE \"$table\" SET \"$fieldName\" = '$newValue' WHERE ID = ".$row["ID"]);
 					}
 				}
@@ -90,7 +91,7 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 	}
 
 
-	function update() {
+	function update($request) {
 		if(isset($_GET["fieldName"])) {
 			$fieldNameString = $_GET["fieldName"];
 			$fieldNameArray = explode("_", $fieldNameString);
@@ -103,8 +104,7 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 					$value = Convert::raw2sql($_GET[$fieldNameString]);
 				}
 				$recordID = intval($fieldNameArray[1]);
-				$className = $this->tableArray[0];
-				$record = $className::get()->byID($recordID);
+				$record = DataObject::get_by_id($this->tableArray[0], $recordID);
 				if($record) {
 					if(method_exists($record, "canPublish") && !$record->canPublish()) {
 						return Security::permissionFailure($this);
@@ -132,7 +132,7 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 			return $this->renderWith("MetaTagCMSControlPagesAjax");
 		}
 		else {
-			$this->redirect($this->Link());
+			Director::redirect($this->Link());
 			return array();
 		}
 	}
@@ -145,15 +145,9 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 
 	function MyRecords() {
 		$excludeWhere = "AND \"ShowInSearch\" = 1 AND \"ClassName\" <> 'ErrorPage'";
-		$className = $this->tableArray[0];
-		$pages = $className::get()->filter(array(
-			"ParentID" => $this->ParentID,
-			"ShowInSearch" => 1
-		))->exclude(array(
-			"ClassName" => 'ErrorPage'
-		))->limit($this->myRecordsLimit);
+		$pages = DataObject::get($this->tableArray[0], "ParentID = ".$this->ParentID. " ".$excludeWhere, '', '', $this->myRecordsLimit());
 		$dos = null;
-		if($pages->count()) {
+		if($pages) {
 			foreach($pages as $page) {
 				if($page instanceOf ErrorPage || !$page->canView(new Member())) {
 					$pages->remove($page);
@@ -173,23 +167,16 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 				if($this->mySiteConfig()->UpdateMenuTitle && $page->AutomateMetatags) {
 					$page->MenuTitleAutoUpdate = true;
 				}
-				$className = $this->tableArray[0];
-				if($className::get()->filter(array(
-					"ParentID" => $this->ParentID,
-					"ShowInSearch" => 1
-				))->exclude(array(
-					"ClassName" => 'ErrorPage'
-				))->First()) {
+				if(DataObject::get_one($this->tableArray[0], "ParentID = ".$page->ID. " ".$excludeWhere)) {
 					$page->ChildrenLink = $this->createLevelLink($page->ID);
 				}
 
-				$dos[$page->ID] = new ArrayList();
+				$dos[$page->ID] = new DataObjectSet();
 				$segmentArray = array();
 				$item = $page;
 				$segmentArray[] = array("URLSegment" => $item->URLSegment, "ID" => $item->ID, "ClassName" => $item->ClassName, "Title" => $item->Title);
 				while($item && $item->ParentID) {
-					$className = $this->tableArray[0];
-					$item = $className::get()->byID($item->ParentID);
+					$item = DataObject::get_by_id($this->tableArray[0], $item->ParentID);
 					if($item) {
 						$segmentArray[] = array("URLSegment" => $item->URLSegment, "ID" => $item->ID, "ClassName" => $item->ClassName, "Title" => $item->Title, "Link" => $this->createLevelLink(intval($item->ParentID)-0));
 					}
