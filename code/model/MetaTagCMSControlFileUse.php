@@ -536,16 +536,16 @@ class MetaTagCMSControlFileUse_RecyclingRecord extends DataObject {
 							//doing it.....
 							$file->ParentID = $recylcingFolder->ID;
 							$file->write();
+							//IMPORTANT!
 							return true;
 						}
 					}
-					else {
-						$record = new MetaTagCMSControlFileUse_RecyclingRecord();
-						$record->FileID = $file->ID;
-						$record->FromFolderID = 0;
-						$record->write();
-						$file->delete();
-					}
+					$record = new MetaTagCMSControlFileUse_RecyclingRecord();
+					$record->FileID = $file->ID;
+					$record->FromFolderID = $file->ParentID;
+					$record->write();
+					DB::query("UPDATE \"File\" SET \"ParentID\" = ".$recylcingFolder->ID." WHERE \"File\".\"ID\" = ".$file->ID)
+					return true;
 				}
 			}
 		}
