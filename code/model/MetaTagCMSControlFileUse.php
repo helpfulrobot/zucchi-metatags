@@ -544,7 +544,7 @@ class MetaTagCMSControlFileUse_RecyclingRecord extends DataObject {
 					$record->FileID = $file->ID;
 					$record->FromFolderID = $file->ParentID;
 					$record->write();
-					DB::query("UPDATE \"File\" SET \"ParentID\" = ".$recylcingFolder->ID." WHERE \"File\".\"ID\" = ".$file->ID)
+					DB::query("UPDATE \"File\" SET \"ParentID\" = ".$recylcingFolder->ID." WHERE \"File\".\"ID\" = ".$file->ID);
 					return true;
 				}
 			}
