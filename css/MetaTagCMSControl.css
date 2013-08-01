@@ -93,3 +93,4 @@ td.filename .errorHolder {height: 100px; width:100px; color: red!important;margi
 .pageNumbers strong{background-color: #BFFA37!important;}
 
 .loading .response {background-image: url(/metatags/images/loading.gif); background-repeat: no-repeat; background-position: 5px 7px;}
+.loading td {opacity: 0.2!important}
