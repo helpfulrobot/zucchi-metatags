@@ -1,6 +1,6 @@
 <?php
 
-class FixImageLocations ends BuildTask {
+class FixImageLocations extends BuildTask {
 
 	protected $title = "Fix File Locations";
 
