@@ -16,7 +16,7 @@ class FixImageLocations extends BuildTask {
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
-				$fieldName = $check->DataObjectFieldName;
+				$fieldName = $check->DataObjectFieldName."ID";
 				$folder = Folder::findOrMake($folderName);
 				$objects = DataObject::get($check->DataObjectClassName, "\"".$fieldName."\" > 0");
 				foreach($objects as $object) {
