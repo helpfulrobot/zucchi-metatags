@@ -34,7 +34,7 @@ class FixImageLocations extends BuildTask {
 						}
 					}
 					else {
-						DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted")
+						DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted");
 					}
 				}
 			}
