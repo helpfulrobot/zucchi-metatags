@@ -16,29 +16,38 @@ class FixImageLocations extends BuildTask {
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
+				$objectName = $check->DataObjectClassName;
 				$fieldName = $check->DataObjectFieldName."ID";
 				$folder = Folder::findOrMake($folderName);
-				$objects = DataObject::get($check->DataObjectClassName, "\"".$fieldName."\" > 0");
-				foreach($objects as $object) {
-					$file = DataObject::get_by_id("File", $object->$fieldName);
-					if($file) {
-						DB::alteration_message("
-							We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."
-						");
-						if($this->forReal) {
-							$file->ParentID = $folder->ID;
-							$file->write();
-							DB::alteration_message("Done", "created");
+				$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+				if($objects && $objects->count()) {
+					foreach($objects as $object) {
+						$file = DataObject::get_by_id("File", $object->$fieldName);
+						if($file) {
+							DB::alteration_message("
+								We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."
+							");
+							if($this->forReal) {
+								$file->ParentID = $folder->ID;
+								$file->write();
+								DB::alteration_message("Done", "created");
+							}
+							else {
+								DB::alteration_message("Test Only", "edited");
+							}
 						}
 						else {
-							DB::alteration_message("Test Only", "edited");
+							DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted");
 						}
 					}
-					else {
-						DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted");
-					}
+				}
+				else {
+					DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
 				}
 			}
+		}
+		else {
+			DB::alteration_message("Could not find any checks, please run /dev/build/", "deleted");
 		}
 		if($this->forReal) {
 			DB::alteration_message("To run this tet 'For Real', add ?forreal=1 to your link.", "created");
