@@ -22,7 +22,7 @@ class FixImageLocations extends BuildTask {
 				DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "created");
 			}
 		}
-		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE', 'HAS_MANY') AND \"IsLiveVersion\" = 0");
+		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE', 'HAS_MANY') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File' ");
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
@@ -38,22 +38,28 @@ class FixImageLocations extends BuildTask {
 					$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
 					if($objects && $objects->count()) {
 						foreach($objects as $object) {
-							$file = DataObject::get_by_id("File", $object->$fieldName);
-							if($file) {
-								DB::alteration_message("
-									We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."
-								");
-								if($this->forReal) {
-									$file->ParentID = $folder->ID;
-									$file->write();
-									DB::alteration_message("Done", "created");
-								}
-								else {
-									DB::alteration_message("Test Only", "edited");
-								}
+							if($object instanceOf File) {
+								//do nothing
 							}
 							else {
-								DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted");
+								$file = DataObject::get_by_id("File", $object->$fieldName);
+								if($file) {
+									if($file instanceOf Folder) {
+										//do nothing
+									}
+									else {
+										DB::alteration_message("
+											We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."
+										");
+										if($this->forReal) {
+											$file->ParentID = $folder->ID;
+											$file->write();
+										}
+									}
+								}
+								else {
+									DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted");
+								}
 							}
 						}
 					}
