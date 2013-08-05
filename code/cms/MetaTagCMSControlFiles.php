@@ -210,7 +210,7 @@ class MetaTagCMSControlFiles extends Controller {
 
 	function MyRecords() {
 		//Filesystem::sync($this->ParentID);
-		$files = DataObject::get($this->tableArray[0], "\"ParentID\" = ".$this->ParentID, '', '', $this->myRecordsLimit());
+		$files = DataObject::get($this->tableArray[0], "\"ParentID\" = ".$this->ParentID, "IF(\"ClassName\" = 'Folder', 0, 1) ASC, \"Name\" ASC ", '', $this->myRecordsLimit());
 		$dos = null;
 		if($files) {
 			foreach($files as $file) {

@@ -154,6 +154,12 @@ class MetaTagCMSControlFileUse extends DataObject {
 		}
 	}
 
+	/**
+	 *
+	 * @param File $file
+	 * @param Boolean #quickBooleanCheck - if true just returns if the file is used YES or NO in a more efficient manner
+	 * @param Boolean $saveListOfPlaces -
+	 */
 	public static function file_usage_count($file, $quickBooleanCheck = false, $saveListOfPlaces = false) {
 		$fileID = $file->ID;
 		if(!isset(self::$file_usage_array[$fileID])) {
