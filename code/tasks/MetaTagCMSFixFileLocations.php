@@ -16,10 +16,11 @@ class FixImageLocations extends BuildTask {
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
+				$fieldName = $check->DataObjectFieldName;
 				$folder = Folder::findOrMake($folderName);
-				$objects = DataObject::get($check->DataObjectClassName, "\"".$check->DataObjectFieldName."\" > 0");
+				$objects = DataObject::get($check->DataObjectClassName, "\"".$fieldName."\" > 0");
 				foreach($objects as $object) {
-					$file = DataObject::get_by_id("File", $object->DataObjectFieldName);
+					$file = DataObject::get_by_id("File", $object->$fieldName);
 					if($file) {
 						DB::alteration_message("
 							We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."
