@@ -28,10 +28,10 @@ class FixImageLocations extends BuildTask {
 						if($this->forReal) {
 							$file->ParentID = $folder->ID;
 							$file->write();
-							DB::aleration_message("Done", "created");
+							DB::alteration_message("Done", "created");
 						}
 						else {
-							DB::aleration_message("Test Only", "edited");
+							DB::alteration_message("Test Only", "edited");
 						}
 					}
 					else {
