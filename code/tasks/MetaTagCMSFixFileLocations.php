@@ -2,6 +2,10 @@
 
 class FixImageLocations ends BuildTask {
 
+	protected $title = "Fix File Locations";
+
+	protected $description = "This method is useful when most of your files end up in the 'Upload' folder.  This task will put all the HAS_ONE and HAS_MANY files into the following folders {CLASSNAME}_{FIELDNAME}.  You can run this task safely, as it will only execute with a special GET parameter (i.e. it defaults to run in test-mode only).";
+
 	private $forReal = false;
 
 	function run($request) {
