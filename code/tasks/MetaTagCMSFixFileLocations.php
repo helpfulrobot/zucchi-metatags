@@ -40,7 +40,7 @@ class FixImageLocations extends BuildTask {
 			}
 		}
 		if($this->forReal) {
-			DB::alteration_message("To run this tet 'For Real', add ?forreal=1 to your link.", "created")
+			DB::alteration_message("To run this tet 'For Real', add ?forreal=1 to your link.", "created");
 		}
 	}
 
