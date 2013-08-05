@@ -29,10 +29,11 @@ class FixImageLocations extends BuildTask {
 				$objectName = $check->DataObjectClassName;
 				$fieldName = $check->DataObjectFieldName."ID";
 				$folder = Folder::findOrMake($folderName);
+				DB::alteration_message("
+					<h2>Moving $objectName . $fieldName to $folderName</h2>
+				");
 				if($this->summaryOnly) {
-					DB::alteration_message("
-						<h2>Moving $objectName . $fieldName to $folderName</h2>
-					");
+					//do nothing
 				}
 				else {
 					$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
