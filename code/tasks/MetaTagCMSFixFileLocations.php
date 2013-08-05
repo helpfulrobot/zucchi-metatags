@@ -57,9 +57,9 @@ class FixImageLocations extends BuildTask {
 							}
 						}
 					}
-				}
-				else {
-					DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
+					else {
+						DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
+					}
 				}
 			}
 		}
