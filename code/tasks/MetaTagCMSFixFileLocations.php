@@ -58,7 +58,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
 				$objectName = $check->DataObjectClassName;
-				$fieldName = $check->DataObjectFieldName."ID";
+				$fieldName = $check->FileClassName."ID";
 				$fileClassName = $check->FileClassName;
 				$folder = Folder::findOrMake($folderName);
 				DB::alteration_message(
