@@ -82,13 +82,21 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 		$folders = DataObject::get("Folder");
 		if($folders && $folders->count()) {
 			if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
-				DB::alteration_message("
-					We are about to delete the following folder ".$folder->Name.", because it does not have anything in it.",
-					"deleted"
-				);
-				if($this->forReal) {
-					$folder->delete();
+				if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
+					DB::alteration_message("
+						We are about to delete the following folder ".$folder->Name.", because it does not have anything in it.",
+						"deleted"
+					);
+					if($this->forReal) {
+						$folder->delete();
+					}
 				}
+				else {
+					DB::alteration_message("Leaving ".$folder->Name", as it is being referenced.", "repaired");
+				}
+			}
+			else {
+				DB::alteration_message("Leaving ".$folder->Name", as it has items in it");
 			}
 		}
 		else {
@@ -99,32 +107,3 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 
 }
 
-class MetaTagCMSFixImageLocations_CleanupFolders extends BuildTask {
-
-	protected $title = "Remove Empty Folders";
-
-	protected $description = "Removes empty folders...";
-
-	private $forReal = false;
-
-	private $summaryOnly = false;
-
-	function run($request) {
-		if(isset($_GET["forreal"])) {
-			$this->forReal = true;
-		}
-		if(isset($_GET["summaryonly"])) {
-			$this->summaryOnly = true;
-		}
-		else {
-			if(!$this->summaryOnly) {
-				DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "created");
-			}
-		}
-		if(!$this->forReal) {
-			DB::alteration_message("To run this test 'For Real', add ?forreal=1 to your link.", "created");
-		}
-		file_usage_count
-	}
-
-}
