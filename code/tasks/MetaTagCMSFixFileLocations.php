@@ -87,13 +87,21 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											);
 										}
 										else {
-											DB::alteration_message(
-												"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-												"created"
-											);
-											if($this->forReal) {
-												$file->ParentID = $folder->ID;
-												$file->write();
+											if( ! in_array($file->ParentID, $this->listOfIgnoreFoldersArray)) {
+												DB::alteration_message(
+													"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+													"created"
+												);
+												if($this->forReal) {
+													$file->ParentID = $folder->ID;
+													$file->write();
+												}
+											}
+											else {
+												DB::alteration_message(
+													"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+													"repaired"
+												);
 											}
 										}
 									}
