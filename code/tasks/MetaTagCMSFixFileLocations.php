@@ -74,8 +74,8 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
 					}
 					elseif($check->DataObjectIsFile) {
-						$fieldName = $check->DataObjectClassName."ID";
-						$objects = DataObject::get($fileClassName, "\"".$fieldName."\" > 0");
+						//$fieldName = $check->DataObjectClassName."ID";
+						$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
 					}
 					if($objects && $objects->count()) {
 						foreach($objects as $object) {
