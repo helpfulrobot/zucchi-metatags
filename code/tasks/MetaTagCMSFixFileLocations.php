@@ -1,6 +1,6 @@
 <?php
 
-class FixImageLocations extends BuildTask {
+class MetaTagCMSFixImageLocations extends BuildTask {
 
 	protected $title = "Fix File Locations";
 
@@ -14,13 +14,14 @@ class FixImageLocations extends BuildTask {
 		if(isset($_GET["forreal"])) {
 			$this->forReal = true;
 		}
+		elseif(!$this->forReal) {
+			DB::alteration_message("To run this test 'For Real', add ?forreal=1 to your link.", "repaired");
+		}
 		if(isset($_GET["summaryonly"])) {
 			$this->summaryOnly = true;
 		}
-		else {
-			if(!$this->summaryOnly) {
-				DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "created");
-			}
+		elseif(!$this->summaryOnly) {
+			DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "repaired");
 		}
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
 		if($checks && $checks->count()) {
@@ -29,9 +30,10 @@ class FixImageLocations extends BuildTask {
 				$objectName = $check->DataObjectClassName;
 				$fieldName = $check->DataObjectFieldName."ID";
 				$folder = Folder::findOrMake($folderName);
-				DB::alteration_message("
-					<h2>Moving $objectName . $fieldName to $folderName</h2>
-				");
+				DB::alteration_message(
+					"<h2>Moving $objectName . $fieldName to $folderName</h2>",
+					"created"
+				);
 				if($this->summaryOnly) {
 					//do nothing
 				}
@@ -49,9 +51,10 @@ class FixImageLocations extends BuildTask {
 										//do nothing
 									}
 									else {
-										DB::alteration_message("
-											We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."
-										");
+										DB::alteration_message(
+											"We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."",
+											"created"
+										);
 										if($this->forReal) {
 											$file->ParentID = $folder->ID;
 											$file->write();
@@ -59,7 +62,10 @@ class FixImageLocations extends BuildTask {
 									}
 								}
 								else {
-									DB::alteration_message("Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")", "deleted");
+									DB::alteration_message(
+										"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
+										"deleted"
+									);
 								}
 							}
 						}
@@ -73,9 +79,52 @@ class FixImageLocations extends BuildTask {
 		else {
 			DB::alteration_message("Could not find any checks, please run /dev/build/", "deleted");
 		}
+		$folders = DataObject::get("Folder");
+		if($folders && $folders->count()) {
+			if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
+				DB::alteration_message("
+					We are about to delete the following folder ".$folder->Name.", because it does not have anything in it.",
+					"deleted"
+				);
+				if($this->forReal) {
+					$folder->delete();
+				}
+			}
+		}
+		else {
+			DB::alteration_message("Could not find any folders. There might be something wrong!", "deleted");
+		}
+
+	}
+
+}
+
+class MetaTagCMSFixImageLocations_CleanupFolders extends BuildTask {
+
+	protected $title = "Remove Empty Folders";
+
+	protected $description = "Removes empty folders...";
+
+	private $forReal = false;
+
+	private $summaryOnly = false;
+
+	function run($request) {
+		if(isset($_GET["forreal"])) {
+			$this->forReal = true;
+		}
+		if(isset($_GET["summaryonly"])) {
+			$this->summaryOnly = true;
+		}
+		else {
+			if(!$this->summaryOnly) {
+				DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "created");
+			}
+		}
 		if(!$this->forReal) {
 			DB::alteration_message("To run this test 'For Real', add ?forreal=1 to your link.", "created");
 		}
+		file_usage_count
 	}
 
 }
