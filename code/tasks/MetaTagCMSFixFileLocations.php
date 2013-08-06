@@ -172,12 +172,12 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			foreach($folders as $folder) {
 				if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
 					if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
-						DB::alteration_message("
-							Deleting empty folder: <strong>".$folder->FileName."</strong>",
-							"deleted"
-						);
 						if(file_exists($folder->getFullPath())) {
-							if($this->forReal) {
+							if($this->cleanupFolders) {
+								DB::alteration_message("
+									Deleting empty folder: <strong>".$folder->FileName."</strong>",
+									"deleted"
+								);
 								$folder->delete();
 							}
 						}
