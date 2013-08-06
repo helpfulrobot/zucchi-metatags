@@ -90,7 +90,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 				if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
 					if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
 						DB::alteration_message("
-							We are about to delete the following folder ".$folder->Name.", because it does not have anything in it.",
+							We are about to delete the following folder ".$folder->FileName."/".$folder->Name.", because it does not have anything in it.",
 							"deleted"
 						);
 						if($this->forReal) {
@@ -98,11 +98,11 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						}
 					}
 					else {
-						DB::alteration_message("Leaving ".$folder->Name.", as it is being referenced.", "repaired");
+						DB::alteration_message("Leaving ".$folder->FileName."/".$folder->Name.", as it is being referenced.", "repaired");
 					}
 				}
 				else {
-					DB::alteration_message("Leaving ".$folder->Name.", as it has items in it.");
+					DB::alteration_message("Leaving ".$folder->FileName."/".$folder->Name.", as it has items in it.");
 				}
 			}
 		}
