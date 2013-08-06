@@ -26,6 +26,12 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	private $forReal = false;
 
 	/**
+	 * is this task running 'for real' or as test only?
+	 * @var Boolean
+	 */
+	private $doOne = false;
+
+	/**
 	 * only show the summary OR the full details
 	 * summaries only is not available for non-test tasks
 	 * @var Boolean
@@ -34,16 +40,21 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 
 	function run($request) {
 		if(isset($_GET["forreal"])) {
-			$this->forReal = true;
+			$this->forReal = $_GET["forreal"];
 		}
 		elseif(!$this->forReal) {
-			DB::alteration_message("To run this test 'For Real', add ?forreal=1 to your link.", "repaired");
+			DB::alteration_message("Apply <a href=\"".$this->linkWithGetParameter("forreal", 1)."\">all suggested changes</a>? CAREFUL!<hr />", "deleted");
 		}
 		if(isset($_GET["summaryonly"])) {
-			$this->summaryOnly = true;
+			$this->summaryOnly = $_GET["summaryonly"];
+			DB::alteration_message("Prefer a <a href=\"".$this->linkWithGetParameter("all", 1)."\">full details</a>?<hr />", "repaired");
 		}
 		elseif(!$this->summaryOnly) {
-			DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "repaired");
+			DB::alteration_message("Prefer a <a href=\"".$this->linkWithGetParameter("summaryonly", 1)."\">summary only</a>?<hr />", "repaired");
+		}
+		if(isset($_GET["doone"])) {
+			$this->forReal = 1;
+			$this->doOne = urldecode($_GET["doone"]);
 		}
 
 		//work out the folders to ignore...
@@ -51,81 +62,99 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			$folderToIgnore = Folder::findOrMake($folderToIgnoreName);
 			$this->addListOfIgnoreFoldersArray($folderToIgnore);
 		}
-		DB::alteration_message("Files in the following Folders will be ignored: <br />".implode("<br />&nbsp; &nbsp; &nbsp; - " , $this->listOfIgnoreFoldersArray), "repaired");
+		DB::alteration_message("Files in the following Folders will be ignored: <br />&nbsp; &nbsp; &nbsp; - ".implode("<br />&nbsp; &nbsp; &nbsp; - " , $this->listOfIgnoreFoldersArray)."<hr />", "repaired");
 
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
-				$objectName = $check->DataObjectClassName;
-				$fieldName = $check->DataObjectFieldName."ID";
-				$fileClassName = $check->FileClassName;
-				$folder = Folder::findOrMake($folderName);
-				DB::alteration_message(
-					"<h3>Moving $objectName . $fieldName to <strong>$folderName</strong></h3>",
-					"created"
-				);
-				if($this->summaryOnly) {
-					//do nothing
-				}
-				else {
-					$objects = null;
-					if($check->FileIsFile) {
-						$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+				if(!$this->doOne || $this->doOne == $folderName) {
+					$objectName = $check->DataObjectClassName;
+					$fieldName = $check->DataObjectFieldName."ID";
+					$fileClassName = $check->FileClassName;
+					$folder = Folder::findOrMake($folderName);
+					DB::alteration_message(
+						"<hr /><h3>All files attached to $objectName . $fieldName moved to <a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">$folderName</a></h3>",
+						"created"
+					);
+					if($this->summaryOnly) {
+						//do nothing
 					}
-					elseif($check->DataObjectIsFile) {
-						//$fieldName = $check->DataObjectClassName."ID";
-						$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
-					}
-					if($objects && $objects->count()) {
-						foreach($objects as $object) {
-							if($object instanceOf File) {
-								$file = $object;//do nothing
-							}
-							else {
-								$file = DataObject::get_by_id("File", $object->$fieldName);
-							}
-							if($file) {
-								if($file instanceOf Folder) {
-									//do nothing
+					else {
+						$objects = null;
+						if($check->FileIsFile) {
+							$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+						}
+						elseif($check->DataObjectIsFile) {
+							//$fieldName = $check->DataObjectClassName."ID";
+							$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+						}
+						if($objects && $objects->count()) {
+							foreach($objects as $object) {
+								if($object instanceOf File) {
+									$file = $object;//do nothing
 								}
 								else {
-									if($file->ParentID == $folder->ID) {
-										DB::alteration_message(
-											"file OK",
-											"created"
-										);
+									$file = DataObject::get_by_id("File", $object->$fieldName);
+								}
+								if($file) {
+									if($file instanceOf Folder) {
+										//do nothing
 									}
 									else {
-										if(isset($this->listOfIgnoreFoldersArray[$file->ParentID])) {
+										if($file->ParentID == $folder->ID) {
 											DB::alteration_message(
-												"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-												"repaired"
+												"file OK",
+												"created"
 											);
 										}
 										else {
-											DB::alteration_message(
-												"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-												"created"
-											);
-											if($this->forReal) {
-												$file->ParentID = $folder->ID;
-												$file->write();
+											if(isset($this->listOfIgnoreFoldersArray[$file->ParentID])) {
+												DB::alteration_message(
+													"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+													"repaired"
+												);
+											}
+											else {
+												DB::alteration_message(
+													"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+													"created"
+												);
+												if($this->forReal) {
+													if($file->exists()) {
+														if(file_exists($file->getFullPath())) {
+															$file->ParentID = $folder->ID;
+															$file->write();
+														}
+														else {
+															DB::alteration_message(
+																"ERROR: phyiscal file could not be found: ".$file->getFullPath()." ",
+																"deleted"
+															);
+														}
+													}
+													else {
+														DB::alteration_message(
+															"ERROR: file not found in database: /".$file->FileName." ",
+															"deleted"
+														);
+													}
+												}
 											}
 										}
 									}
 								}
-							}
-							else {
-								DB::alteration_message(
-									"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
-									"deleted"
-								);
+								else {
+									DB::alteration_message(
+										"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
+										"deleted"
+									);
+								}
 							}
 						}
-					}
-					else {
-						DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
+						else {
+							DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
+						}
 					}
 				}
 			}
@@ -144,19 +173,24 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 				if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
 					if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
 						DB::alteration_message("
-							Deleting empty folder: <strong>".$folder->FileName."</strong>.",
+							Deleting empty folder: <strong>".$folder->FileName."</strong>",
 							"deleted"
 						);
-						if($this->forReal) {
-							$folder->delete();
+						if(file_exists($folder->getFullPath())) {
+							if($this->forReal) {
+								$folder->delete();
+							}
+						}
+						else {
+							DB::alteration_message("Could not find this phyiscal folder: ".$folder->getFullPath(), "deleted");
 						}
 					}
 					else {
-						DB::alteration_message("Leaving referenced folder: <strong>".$folder->FileName."</strong>.", "repaired");
+						DB::alteration_message("Leaving referenced folder: <strong>".$folder->FileName."</strong>", "repaired");
 					}
 				}
 				else {
-					DB::alteration_message("Leaving used folder: <strong>".$folder->FileName."</strong>.");
+					DB::alteration_message("Leaving used folder: <strong>".$folder->FileName."</strong>");
 				}
 			}
 		}
@@ -174,6 +208,10 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 				$this->addListOfIgnoreFoldersArray($childFolder);
 			}
 		}
+	}
+
+	private function linkWithGetParameter($var, $value) {
+		return "/dev/tasks/MetaTagCMSFixImageLocations?$var=".urlencode($value);
 	}
 
 }
