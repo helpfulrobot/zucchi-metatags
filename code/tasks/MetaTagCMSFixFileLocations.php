@@ -79,24 +79,31 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 		else {
 			DB::alteration_message("Could not find any checks, please run /dev/build/", "deleted");
 		}
+		DB::alteration_message("---------------------------------------");
+		DB::alteration_message("---------------------------------------");
+		DB::alteration_message("CLEANING FOLDERS");
+		DB::alteration_message("---------------------------------------");
+		DB::alteration_message("---------------------------------------");
 		$folders = DataObject::get("Folder");
 		if($folders && $folders->count()) {
-			if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
-				if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
-					DB::alteration_message("
-						We are about to delete the following folder ".$folder->Name.", because it does not have anything in it.",
-						"deleted"
-					);
-					if($this->forReal) {
-						$folder->delete();
+			foreach($folders as $folder) {
+				if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
+					if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
+						DB::alteration_message("
+							We are about to delete the following folder ".$folder->Name.", because it does not have anything in it.",
+							"deleted"
+						);
+						if($this->forReal) {
+							$folder->delete();
+						}
+					}
+					else {
+						DB::alteration_message("Leaving ".$folder->Name.", as it is being referenced.", "repaired");
 					}
 				}
 				else {
-					DB::alteration_message("Leaving ".$folder->Name.", as it is being referenced.", "repaired");
+					DB::alteration_message("Leaving ".$folder->Name.", as it has items in it.");
 				}
-			}
-			else {
-				DB::alteration_message("Leaving ".$folder->Name.", as it has items in it");
 			}
 		}
 		else {
