@@ -88,7 +88,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											);
 										}
 										else {
-											if(isset($this->listOfIgnoreFoldersArray[$file->ParentID]])) {
+											if(isset($this->listOfIgnoreFoldersArray[$file->ParentID])) {
 												DB::alteration_message(
 													"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
 													"repaired"
