@@ -2,6 +2,10 @@
 
 class MetaTagCMSFixImageLocations extends BuildTask {
 
+	public static function my_link(){
+		return "/dev/tasks/MetaTagCMSFixImageLocations/";
+	}
+
 	protected $title = "Fix File Locations";
 
 	protected $description = "This method is useful when most of your files end up in the 'Upload' folder.  This task will put all the HAS_ONE and HAS_MANY files into the following folders {CLASSNAME}_{FIELDNAME}.  You can run this task safely, as it will only execute with a special GET parameter (i.e. it defaults to run in test-mode only).";
@@ -84,7 +88,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						$objectName = $check->DataObjectClassName;
 						$fieldName = $check->DataObjectFieldName."ID";
 						$fileClassName = $check->FileClassName;
-						$folder = Folder::findOrMake($folderName);
+						$folder = null;
 						DB::alteration_message(
 							"<hr /><h3>All files attached to $objectName . $fieldName <a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">can be moved to</a> <span style=\"color: green;\">$folderName</span></h3>"
 						);
@@ -113,6 +117,9 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											//do nothing
 										}
 										else {
+											if(!$folder){
+												$folder = Folder::findOrMake($folderName);
+											}
 											if($file->ParentID == $folder->ID) {
 												DB::alteration_message(
 													"OK ... ". $file->FileName,

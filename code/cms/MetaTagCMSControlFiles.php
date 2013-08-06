@@ -54,6 +54,10 @@ class MetaTagCMSControlFiles extends Controller {
 		return $this->renderWith("MetaTagCMSControlFiles");
 	}
 
+	function cleanupfolders(){
+		return $this->redirect(MetaTagCMSFixImageLocations::my_link());
+	}
+
 	function childrenof($request) {
 		$id = intval($request->param("ID"));
 		if($id) {
