@@ -49,12 +49,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 		//work out the folders to ignore...
 		foreach(self::$folders_to_ignore as $folderToIgnoreName) {
 			$folderToIgnore = Folder::findOrMake($folderToIgnoreName);
-			$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->ID;
-			$parentFolder = $folderToIgnore;
-			while($childFolder = DataObject::get_by_id("Folder", $parentFolder->ID)) {
-				$this->listOfIgnoreFoldersArray[$childFolder->ID] = $childFolder->ID;
-				$parentFolder = $childFolder;
-			}
+			$this->addListOfIgnoreFoldersArray($folderToIgnore);
 		}
 
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
@@ -152,6 +147,16 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			DB::alteration_message("Could not find any folders. There might be something wrong!", "deleted");
 		}
 
+	}
+
+	private function addListOfIgnoreFoldersArray(Folder $folderToIgnore) {
+		$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->ID;
+		$childFolders = DataObject::get("Folder", "ParentID = ".$folderToIgnore->ID);
+		if($childFolders->count()) {
+			foreach($childFolders as $childFolder) {
+				$this->addListOfIgnoreFoldersArray($childFolder);
+			}
+		}
 	}
 
 }
