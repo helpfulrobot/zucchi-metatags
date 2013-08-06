@@ -158,7 +158,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			if($hasManyArray && count($hasManyArray)) {
 				foreach($hasManyArray as $fieldName => $hasManyClass) {
 					//NOTE - We are referencing HAS_ONE here on purpose!!!!
-					$hasManyCheckItems = (array) Object::inherited_static($hasManyClass, 'has_one');
+					$hasManyCheckItems = (array) Object::uninherited_static($hasManyClass, 'has_one');
 					$hasManyFound = false;
 					foreach($hasManyCheckItems as $hasManyfieldName => $hasManyForeignClass) {
 						if($hasManyForeignClass == $class) {
