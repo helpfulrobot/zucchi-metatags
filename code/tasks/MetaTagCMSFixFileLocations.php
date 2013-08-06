@@ -6,8 +6,30 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 
 	protected $description = "This method is useful when most of your files end up in the 'Upload' folder.  This task will put all the HAS_ONE and HAS_MANY files into the following folders {CLASSNAME}_{FIELDNAME}.  You can run this task safely, as it will only execute with a special GET parameter (i.e. it defaults to run in test-mode only).";
 
+	/**
+	 * Names of folders to ignore
+	 * @var Array
+	 */
+	private static $folders_to_ignore = array("media");
+		public static function set_folders_to_ignore($a){self::$folders_to_ignore = $a;}
+
+	/**
+	 * automatically includes any child folders
+	 * @var array
+	 */
+	private $listOfIgnoreFoldersArray = array();
+
+	/**
+	 * is this task running 'for real' or as test only?
+	 * @var Boolean
+	 */
 	private $forReal = false;
 
+	/**
+	 * only show the summary OR the full details
+	 * summaries only is not available for non-test tasks
+	 * @var Boolean
+	 */
 	private $summaryOnly = false;
 
 	function run($request) {
@@ -23,6 +45,18 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 		elseif(!$this->summaryOnly) {
 			DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "repaired");
 		}
+
+		//work out the folders to ignore...
+		foreach(self::$folders_to_ignore as $folderToIgnoreName) {
+			$folderToIgnore = Folder::findOrMake($folderToIgnoreName);
+			$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->ID;
+			$parentFolder = $folderToIgnore;
+			while($childFolder = DataObject::get_by_id("Folder", "ParentID = ".$parentFolder->ID)) {
+				$this->listOfIgnoreFoldersArray[$childFolder->ID] = $childFolder->ID;
+				$parentFolder = $childFolder;
+			}
+		}
+
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
