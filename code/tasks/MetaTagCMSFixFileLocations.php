@@ -22,7 +22,7 @@ class FixImageLocations extends BuildTask {
 				DB::alteration_message("To see a summary only, add ?summaryonly=1 to your link.", "created");
 			}
 		}
-		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 ");
+		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
 		if($checks && $checks->count()) {
 			foreach($checks as $check) {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
