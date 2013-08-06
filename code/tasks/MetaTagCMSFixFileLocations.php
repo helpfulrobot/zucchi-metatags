@@ -52,7 +52,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			$this->addListOfIgnoreFoldersArray($folderToIgnore);
 		}
 
-		print_r($this->addListOfIgnoreFoldersArray);
+		print_r($this->listOfIgnoreFoldersArray);
 		die("asdf");
 
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
