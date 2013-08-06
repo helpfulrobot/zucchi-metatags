@@ -31,7 +31,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 				$fieldName = $check->DataObjectFieldName."ID";
 				$folder = Folder::findOrMake($folderName);
 				DB::alteration_message(
-					"<h2>Moving $objectName . $fieldName to $folderName</h2>",
+					"<h3>Moving $objectName . $fieldName to <strong>$folderName</strong></h3>",
 					"created"
 				);
 				if($this->summaryOnly) {
@@ -52,7 +52,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 									}
 									else {
 										DB::alteration_message(
-											"We are about to move ".$file->FileName." to assets/".$folderName."/".$file->Name."",
+											"We are about to move: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
 											"created"
 										);
 										if($this->forReal) {
@@ -90,7 +90,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 				if(!DataObject::get_one("File", "ParentID = ".$folder->ID)) {
 					if(MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
 						DB::alteration_message("
-							We are about to delete the following folder ".$folder->FileName."/".$folder->Name.", because it does not have anything in it.",
+							Deleting empty folder: <strong>".$folder->FileName."</strong>.",
 							"deleted"
 						);
 						if($this->forReal) {
@@ -98,11 +98,11 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						}
 					}
 					else {
-						DB::alteration_message("Leaving ".$folder->FileName."/".$folder->Name.", as it is being referenced.", "repaired");
+						DB::alteration_message("Leaving referenced folder: <strong>".$folder->FileName."</strong>.", "repaired");
 					}
 				}
 				else {
-					DB::alteration_message("Leaving ".$folder->FileName."/".$folder->Name.", as it has items in it.");
+					DB::alteration_message("Leaving used folder: <strong>".$folder->FileName."</strong>.");
 				}
 			}
 		}
