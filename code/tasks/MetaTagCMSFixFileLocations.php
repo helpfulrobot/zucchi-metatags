@@ -86,7 +86,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						$fileClassName = $check->FileClassName;
 						$folder = Folder::findOrMake($folderName);
 						DB::alteration_message(
-							"<hr /><h3>All files attached to $objectName . $fieldName can be <a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">moved to</a> <span style=\"color: green;\">$folderName</span></h3>"
+							"<hr /><h3>All files attached to $objectName . $fieldName <a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">can be moved to</a> <span style=\"color: green;\">$folderName</span></h3>"
 						);
 						if($this->summaryOnly) {
 							//do nothing
