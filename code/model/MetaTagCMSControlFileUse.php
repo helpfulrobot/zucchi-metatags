@@ -99,8 +99,6 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"ConnectionType" => "Enum('DB,HAS_ONE,MANY_MANY,BELONGS_MANY_MANY')"
 	);
 
-
-
 	/**
 	 * create a list of tables and fields that need to be checked
 	 * see class comments
@@ -210,7 +208,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 			")->value()) {
 				$dataObjectIsFile =  in_array($dataObjectClassName, self::$file_classes) ? 1 : 0;
 				$fileIsFile =  in_array($fileClassName, self::$file_classes) ? 1 : 0;
-				for($i = 0 $i < ($dataObjectIsFile + $fileIsFile); $i++) {
+				for($i = 0; $i < ($dataObjectIsFile + $fileIsFile); $i++) {
 					$computedDataObjectIsFile = false;
 					$computedFileIsFile = false;
 					if($i == 0 && $dataObjectIsFile) {
@@ -250,6 +248,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 	 * @param File $file
 	 * @param Boolean #quickBooleanCheck - if true just returns if the file is used YES or NO in a more efficient manner
 	 * @param Boolean $saveListOfPlaces -
+	 * @return Int
 	 */
 	public static function file_usage_count($file, $quickBooleanCheck = false, $saveListOfPlaces = false) {
 		$fileID = $file->ID;
