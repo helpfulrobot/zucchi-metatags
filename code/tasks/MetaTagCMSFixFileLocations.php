@@ -51,13 +51,21 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 										//do nothing
 									}
 									else {
-										DB::alteration_message(
-											"We are about to move: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-											"created"
-										);
-										if($this->forReal) {
-											$file->ParentID = $folder->ID;
-											$file->write();
+										if($file->ParentID == $folder->ID) {
+											DB::alteration_message(
+												"file OK",
+												"created"
+											);
+										}
+										else {
+											DB::alteration_message(
+												"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+												"created"
+											);
+											if($this->forReal) {
+												$file->ParentID = $folder->ID;
+												$file->write();
+											}
 										}
 									}
 								}
