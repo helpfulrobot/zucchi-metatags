@@ -51,9 +51,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			$folderToIgnore = Folder::findOrMake($folderToIgnoreName);
 			$this->addListOfIgnoreFoldersArray($folderToIgnore);
 		}
-
-		print_r($this->listOfIgnoreFoldersArray);
-		die("asdf");
+		DB::alteration_message("Folders to ignore: ".implode("," , $this->listOfIgnoreFoldersArray), "repaired");
 
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
 		if($checks && $checks->count()) {
@@ -90,7 +88,13 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											);
 										}
 										else {
-											if( ! in_array($file->ParentID, $this->listOfIgnoreFoldersArray)) {
+											if(isset($this->listOfIgnoreFoldersArray[$file->ParentID]])) {
+												DB::alteration_message(
+													"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+													"repaired"
+												);
+											}
+											else {
 												DB::alteration_message(
 													"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
 													"created"
@@ -99,12 +103,6 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 													$file->ParentID = $folder->ID;
 													$file->write();
 												}
-											}
-											else {
-												DB::alteration_message(
-													"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-													"repaired"
-												);
 											}
 										}
 									}
@@ -161,7 +159,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	}
 
 	private function addListOfIgnoreFoldersArray(Folder $folderToIgnore) {
-		$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->ID;
+		$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->FileName;
 		$childFolders = DataObject::get("Folder", "ParentID = ".$folderToIgnore->ID);
 		if($childFolders && $childFolders->count()) {
 			foreach($childFolders as $childFolder) {
