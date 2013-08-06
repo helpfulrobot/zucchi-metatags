@@ -59,6 +59,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 				$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
 				$objectName = $check->DataObjectClassName;
 				$fieldName = $check->DataObjectFieldName."ID";
+				$fileClassName = $check->FileClassName;
 				$folder = Folder::findOrMake($folderName);
 				DB::alteration_message(
 					"<h3>Moving $objectName . $fieldName to <strong>$folderName</strong></h3>",
@@ -68,51 +69,57 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 					//do nothing
 				}
 				else {
-					$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+					$objects = null;
+					if($check->FileIsFile) {
+						$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+					}
+					elseif($check->DataObjectIsFile) {
+						$objects = DataObject::get($fileClassName, "\"".$fieldName."\" > 0");
+					}
 					if($objects && $objects->count()) {
 						foreach($objects as $object) {
 							if($object instanceOf File) {
-								//do nothing
+								$file = $object;//do nothing
 							}
 							else {
 								$file = DataObject::get_by_id("File", $object->$fieldName);
-								if($file) {
-									if($file instanceOf Folder) {
-										//do nothing
+							}
+							if($file) {
+								if($file instanceOf Folder) {
+									//do nothing
+								}
+								else {
+									if($file->ParentID == $folder->ID) {
+										DB::alteration_message(
+											"file OK",
+											"created"
+										);
 									}
 									else {
-										if($file->ParentID == $folder->ID) {
+										if(isset($this->listOfIgnoreFoldersArray[$file->ParentID])) {
 											DB::alteration_message(
-												"file OK",
-												"created"
+												"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+												"repaired"
 											);
 										}
 										else {
-											if(isset($this->listOfIgnoreFoldersArray[$file->ParentID])) {
-												DB::alteration_message(
-													"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-													"repaired"
-												);
-											}
-											else {
-												DB::alteration_message(
-													"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
-													"created"
-												);
-												if($this->forReal) {
-													$file->ParentID = $folder->ID;
-													$file->write();
-												}
+											DB::alteration_message(
+												"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+												"created"
+											);
+											if($this->forReal) {
+												$file->ParentID = $folder->ID;
+												$file->write();
 											}
 										}
 									}
 								}
-								else {
-									DB::alteration_message(
-										"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
-										"deleted"
-									);
-								}
+							}
+							else {
+								DB::alteration_message(
+									"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
+									"deleted"
+								);
 							}
 						}
 					}
