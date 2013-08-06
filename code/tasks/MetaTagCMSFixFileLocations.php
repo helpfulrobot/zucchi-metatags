@@ -115,7 +115,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 										else {
 											if($file->ParentID == $folder->ID) {
 												DB::alteration_message(
-													$file->FileName." = OK",
+													"OK ... ". $file->FileName,
 													"created"
 												);
 											}
