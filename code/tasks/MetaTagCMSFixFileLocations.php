@@ -51,7 +51,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			$folderToIgnore = Folder::findOrMake($folderToIgnoreName);
 			$this->addListOfIgnoreFoldersArray($folderToIgnore);
 		}
-		DB::alteration_message("Folders to ignore: ".implode("," , $this->listOfIgnoreFoldersArray), "repaired");
+		DB::alteration_message("Files in the following Folders will be ignored: <br />".implode("<br />&nbsp; &nbsp; &nbsp; - " , $this->listOfIgnoreFoldersArray), "repaired");
 
 		$checks = DataObject::get("MetaTagCMSControlFileUse", "\"ConnectionType\" IN ('HAS_ONE') AND \"IsLiveVersion\" = 0 AND \"DataObjectClassName\" <> 'File'");
 		if($checks && $checks->count()) {
