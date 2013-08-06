@@ -226,17 +226,17 @@ class MetaTagCMSControlFileUse extends DataObject {
 					$obj->FileIsFile =  $computedFileIsFile;
 					$obj->IsLiveVersion = 0;
 					$obj->write();
-				}
-				elseif(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
-					$obj = new MetaTagCMSControlFileUse();
-					$obj->DataObjectClassName = $dataObjectClassName."_Live";
-					$obj->DataObjectFieldName = $dataObjectFieldName;
-					$obj->FileClassName = $fileClassName;
-					$obj->ConnectionType = $connectionType;
-					$obj->DataObjectIsFile = $computedDataObjectIsFile;
-					$obj->FileIsFile =  $computedFileIsFile;
-					$obj->IsLiveVersion = 1;
-					$obj->write();
+					if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
+						$obj = new MetaTagCMSControlFileUse();
+						$obj->DataObjectClassName = $dataObjectClassName."_Live";
+						$obj->DataObjectFieldName = $dataObjectFieldName;
+						$obj->FileClassName = $fileClassName;
+						$obj->ConnectionType = $connectionType;
+						$obj->DataObjectIsFile = $computedDataObjectIsFile;
+						$obj->FileIsFile =  $computedFileIsFile;
+						$obj->IsLiveVersion = 1;
+						$obj->write();
+					}
 				}
 				DB::alteration_message("creating new MetaTagCMSControlFileUse: $dataObjectClassName, $dataObjectFieldName, $fileClassName, $connectionType");
 			}
