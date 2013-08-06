@@ -152,7 +152,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	private function addListOfIgnoreFoldersArray(Folder $folderToIgnore) {
 		$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->ID;
 		$childFolders = DataObject::get("Folder", "ParentID = ".$folderToIgnore->ID);
-		if($childFolders->count()) {
+		if($childFolders && $childFolders->count()) {
 			foreach($childFolders as $childFolder) {
 				$this->addListOfIgnoreFoldersArray($childFolder);
 			}
