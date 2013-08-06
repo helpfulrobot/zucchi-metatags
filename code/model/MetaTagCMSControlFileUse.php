@@ -28,6 +28,12 @@ class MetaTagCMSControlFileUse extends DataObject {
 	private static $excluded_classes = array();
 
 	/**
+	 * list of classes that are files
+	 * @var Array
+	 */
+	private static $file_classes = array();
+
+	/**
 	 * standard SS variable
 	 * @var Array
 	 */
@@ -35,6 +41,8 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"DataObjectClassName" => "Varchar(255)",
 		"DataObjectFieldName" => "Varchar(255)",
 		"FileClassName" => "Varchar(255)",
+		"DataObjectIsFile" => "Boolean",
+		"FileIsFile" => "Boolean",
 		"IsLiveVersion" => "Boolean",
 		"ConnectionType" => "Enum('DB,HAS_ONE,HAS_MANY,MANY_MANY,BELONGS_MANY_MANY')"
 	);
@@ -45,6 +53,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 	 * create a list of tables and fields that need to be checked
 	 */
 	function requireDefaultRecords() {
+		self::$file_classes = ClassInfo::subclassesFor("File");
+		print_r(self::$file_classes);
+		die("boo");
 		parent::requireDefaultRecords();
 		//start again
 		DB::query("DELETE FROM \"MetaTagCMSControlFileUse\";");
@@ -121,12 +132,10 @@ class MetaTagCMSControlFileUse extends DataObject {
 		if(in_array($dataObjectClassName, self::$excluded_classes)  || in_array($fileClassName, self::$excluded_classes)) {
 			return;
 		}
-		//get all file classes
-		$fileClasses = ClassInfo::subclassesFor("File");
-		if( ! in_array($fileClassName, $fileClasses) && $connectionType != "DB") {
-			return;
-		}
-		if($dataObjectFieldName == "ImageTracking") {
+		//if( ! in_array($fileClassName, self::$file_classes) && $connectionType != "DB") {
+		//	return;
+		//}
+		if($dataObjectClassName == "SiteTree" && $dataObjectFieldName == "ImageTracking") {
 			return;
 		}
 		if( ! DB::query("
@@ -139,6 +148,8 @@ class MetaTagCMSControlFileUse extends DataObject {
 			$obj->DataObjectFieldName = $dataObjectFieldName;
 			$obj->FileClassName = $fileClassName;
 			$obj->ConnectionType = $connectionType;
+			$obj->DataObjectIsFile = in_array($dataObjectClassName, self::$file_classes);
+			$obj->FileIsFile = in_array($fileClassName, self::$file_classes);
 			$obj->IsLiveVersion = 0;
 			$obj->write();
 			if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
