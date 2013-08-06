@@ -92,11 +92,11 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 					}
 				}
 				else {
-					DB::alteration_message("Leaving ".$folder->Name", as it is being referenced.", "repaired");
+					DB::alteration_message("Leaving ".$folder->Name.", as it is being referenced.", "repaired");
 				}
 			}
 			else {
-				DB::alteration_message("Leaving ".$folder->Name", as it has items in it");
+				DB::alteration_message("Leaving ".$folder->Name.", as it has items in it");
 			}
 		}
 		else {
