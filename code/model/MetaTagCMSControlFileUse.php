@@ -2,14 +2,6 @@
 
 /**
  *
- *
- *
- *
- *
- *
- *
- *
- *
  * SITUATIONS
  *
  * 0. A NonFileObject.HasOne File
@@ -17,6 +9,7 @@
  *    type = HAS_ONE
  *    DataObjectIsFile = false
  *    FileIsFile = true
+ *
  * 1. A NonFileObject.HasMany Files = see (4)
  *
  * 2. A NonFileObject.ManyMany Files
