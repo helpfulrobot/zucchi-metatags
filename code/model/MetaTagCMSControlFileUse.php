@@ -301,9 +301,9 @@ class MetaTagCMSControlFileUse extends DataObject {
 								break;
 
 							case "HAS_ONE":
-								$countSelect = "SELECT COUNT(\"{$check->DataObjectClassName}\".\"ID\")"
-								$listSelect = "SELECT \"{$check->DataObjectClassName}\".\"ID\" AS MyID"
-								$from = "FROM \"{$check->DataObjectClassName}\""
+								$countSelect = "SELECT COUNT(\"{$check->DataObjectClassName}\".\"ID\")";
+								$listSelect = "SELECT \"{$check->DataObjectClassName}\".\"ID\" AS MyID";
+								$from = "FROM \"{$check->DataObjectClassName}\"";
 								if($check->FileIsFile) {
 									$where = "WHERE \"{$check->DataObjectFieldName}ID\" = {$fileID}"
 									$sql = "
