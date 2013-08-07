@@ -95,6 +95,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		"FileClassName" => "Varchar(255)",
 		"DataObjectIsFile" => "Boolean",
 		"FileIsFile" => "Boolean",
+		"BothAreFiles" => "Boolean",
 		"IsLiveVersion" => "Boolean",
 		"ConnectionType" => "Enum('DB,HAS_ONE,MANY_MANY,BELONGS_MANY_MANY')"
 	);
@@ -195,7 +196,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 		if(in_array($dataObjectClassName, self::$excluded_classes)  || in_array($fileClassName, self::$excluded_classes)) {
 			return;
 		}
-		if($dataObjectClassName == "SiteTree" && $dataObjectFieldName == "ImageTracking") {
+		if($dataObjectFieldName == "ImageTracking" || $dataObjectFieldName == "BackLinkTracking") {
 			return;
 		}
 
@@ -217,6 +218,10 @@ class MetaTagCMSControlFileUse extends DataObject {
 					if(($i == 1 && $fileIsFile ) || !$dataObjectIsFile) {
 						$computedFileIsFile = true;
 					}
+					$bothAreFiles = false;
+					if($dataObjectIsFile && $fileIsFile) {
+						$bothAreFiles = true;
+					}
 					$obj = new MetaTagCMSControlFileUse();
 					$obj->DataObjectClassName = $dataObjectClassName;
 					$obj->DataObjectFieldName = $dataObjectFieldName;
@@ -224,6 +229,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 					$obj->ConnectionType = $connectionType;
 					$obj->DataObjectIsFile = $computedDataObjectIsFile;
 					$obj->FileIsFile =  $computedFileIsFile;
+					$obj->BothAreFiles =  $bothAreFiles;
 					$obj->IsLiveVersion = 0;
 					$obj->write();
 					if(ClassInfo::is_subclass_of($dataObjectClassName, "SiteTree")) {
@@ -234,6 +240,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 						$obj->ConnectionType = $connectionType;
 						$obj->DataObjectIsFile = $computedDataObjectIsFile;
 						$obj->FileIsFile =  $computedFileIsFile;
+						$obj->BothAreFiles =  $bothAreFiles;
 						$obj->IsLiveVersion = 1;
 						$obj->write();
 					}
@@ -510,17 +517,17 @@ class MetaTagCMSControlFileUse extends DataObject {
 	}
 
 
-	public static function upgrade_file_names($verbose = true){
+	public static function upgrade_file_names($folderID, $verbose = true){
 		set_time_limit(60*10); // 10 minutes
 		$whereArray = array();
 		$whereArray[] = "\"Title\" = \"Name\"";
 		foreach(self::$file_sub_string as $subString) {
 			$whereArray[] = "LOCATE('$subString', \"Title\") > 0";
 		}
-		$whereString =  "\"ClassName\" <> 'Folder' AND ( ".implode (" OR ", $whereArray)." )";
-		$folder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
-		if($folder) {
-			$whereString .= " AND ParentID <> ".$folder->ID;
+		$whereString =  "\"ClassName\" <> 'Folder' AND \"ParentID\" = $folderID AND ( ".implode (" OR ", $whereArray)." )";
+		$recyclefolder = Folder::findOrMake(MetaTagCMSControlFiles::get_recycling_bin_name());
+		if($recyclefolder) {
+			$whereString .= " AND ParentID <> ".$recyclefolder->ID;
 		}
 		$files = DataObject::get("File", $whereString);
 		if($files && $files->count()) {
@@ -541,7 +548,7 @@ class MetaTagCMSControlFileUse extends DataObject {
 	private static function upgrade_file_name(File $file, $verbose = true) {
 		$fileID = $file->ID;
 		if(self::file_usage_count($file, true)) {
-			$checks = DataObject::get("MetaTagCMSControlFileUse");
+			$checks = DataObject::get("MetaTagCMSControlFileUse", "\"BothAreFiles\" = 0");
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {
 					if(!$check->IsLiveVersion) {
@@ -551,17 +558,37 @@ class MetaTagCMSControlFileUse extends DataObject {
 						$innerJoinJoin = "";
 						switch ($check->ConnectionType) {
 							case "HAS_ONE":
-								$objName = $check->DataObjectClassName;
-								$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
 								$innerJoinTable = "";
 								$innerJoinJoin = "";
+								if($check->FileIsFile) {
+									$where = "\"{$check->DataObjectFieldName}ID\" = {$fileID}";
+									$objName = $check->DataObjectClassName;
+								}
+								elseif($check->DataObjectIsFile) {
+									$where = "\"{$check->DataObjectFieldName}ID\" > 0 AND \"{$check->DataObjectClassName}\".\"ID\" = {$fileID}";
+									$objName = $check->DataObjectClassName;
+									$innerJoinTable = $check->FileClassName;
+									$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"ID\" = \"".$check->FileClassName."\".\"ID\" ";
+								}
 								break;
 							case "BELONGS_MANY_MANY":
 							case "MANY_MANY":
-								$objName = $check->DataObjectClassName;
-								$where = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"{$check->FileClassName}ID\" = $fileID";
-								$innerJoinTable = "{$check->DataObjectClassName}_{$check->DataObjectFieldName}";
-								$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"ID\" = \"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\".\"ID\"";
+								if($check->ConnectionType == "BELONGS_MANY_MANY") {
+									$innerJoinTable = "\"{$check->FileClassName}_{$check->DataObjectFieldName}\"";
+								}
+								else {
+									$innerJoinTable = "\"{$check->DataObjectClassName}_{$check->DataObjectFieldName}\"";
+								}
+								if($check->FileIsFile) {
+									$where = "$innerJoinTable.\"{$check->FileClassName}ID\" = {$fileID}";
+									$objName = $check->DataObjectClassName;
+									$innerJoinJoin = "\"{$check->DataObjectClassName}\".\"ID\" = $innerJoinTable.\"{$check->DataObjectClassName}ID\"";
+								}
+								elseif($check->DataObjectIsFile) {
+									$where = "$innerJoinTable.\"{$check->DataObjectClassName}ID\" = {$fileID}";
+									$objName = $check->FileClassName;
+									$innerJoinJoin = "\"{$check->FileClassName}\".\"ID\" = $innerJoinTable.\"{$check->FileClassName}ID\"";
+								}
 								break;
 						}
 						$join = "";

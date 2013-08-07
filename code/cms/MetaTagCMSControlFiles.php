@@ -104,10 +104,13 @@ class MetaTagCMSControlFiles extends Controller {
 	}
 
 
-	function updatefilenames($request) {
-		if($count = MetaTagCMSControlFileUse::upgrade_file_names(false)) {
-			Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESUPDATED", "Updated $count file names."));
-			return $this->returnAjaxOrRedirectBack();
+	function upgradefilenames($request) {
+		if($folderID = intval($request->param("ID"))) {
+			$verbose = Director::is_ajax() ? false : true;
+			if($count = MetaTagCMSControlFileUse::upgrade_file_names($folderID, $verbose)) {
+				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESUPDATED", "Updated $count file names."));
+				return $this->returnAjaxOrRedirectBack($verbose);
+			}
 		}
 		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.NAMESNOTUPDATED", "ERROR: Did not update any file names"));
 		return $this->returnAjaxOrRedirectBack();
@@ -115,9 +118,10 @@ class MetaTagCMSControlFiles extends Controller {
 
 	function recyclefolder($request) {
 		if($folderID = intval($request->param("ID"))) {
-			if($count = MetaTagCMSControlFileUse::recycle_folder($folderID, false)) {
+			$verbose = Director::is_ajax() ? false : true;
+			if($count = MetaTagCMSControlFileUse::recycle_folder($folderID, $verbose)) {
 				Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.RECYCLED_FILES", "Recycled unused files in this folder."));
-				return $this->returnAjaxOrRedirectBack();
+				return $this->returnAjaxOrRedirectBack($verbose);
 			}
 		}
 		Session::set("MetaTagCMSControlMessage",  _t("MetaTagCMSControl.DID_NOT_RECYCLE_FILES", "ERROR: Could not recycle all files"));
@@ -196,12 +200,14 @@ class MetaTagCMSControlFiles extends Controller {
 		return $this->returnAjaxOrRedirectBack();
 	}
 
-	protected function returnAjaxOrRedirectBack(){
+	protected function returnAjaxOrRedirectBack($verbose = false){
 		if(Director::is_ajax()) {
 			return $this->renderWith("MetaTagCMSControlFilesAjax");
 		}
 		else {
-			Director::redirect($this->Link());
+			if(!$verbose) {
+				Director::redirect($this->Link());
+			}
 			return array();
 		}
 	}
