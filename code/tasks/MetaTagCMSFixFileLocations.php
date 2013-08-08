@@ -138,7 +138,9 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											}
 											if($file != $object && $this->showMoreDetails) {
 												$fileDetails = "
-												 <hr />{$file->Filename} is linked to: <strong>{$object->Title} ({$object->class}, {$object->ID})</strong>";
+													<hr />Title: <strong>".$file->Title."</strong><br />
+													is linked to: <strong>{$object->Title} ({$object->class}, {$object->ID})</strong><br />
+													location: ".$file->Filename;
 												$file->Error = "";
 												if(!$file->exists()) {
 													$file->Error .= " Could not be found in database: ".$file->class.", ".$file->ID;
@@ -152,7 +154,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 												else {
 													$fileDetails .= "<div style=\"color: red\">$file->Error</div>";
 												}
-												DB::alteration_message($fileDetails."<hr />");
+												DB::alteration_message($fileDetails);
 											}
 											if($file->ParentID == $folder->ID) {
 												DB::alteration_message(
@@ -206,6 +208,9 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 														);
 													}
 												}
+											}
+											if($file != $object && $this->showMoreDetails) {
+												DB::alteration_message("<hr />");
 											}
 										}
 									}
