@@ -138,7 +138,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											}
 											if($file != $object && $this->showMoreDetails) {
 												$fileDetails = "
-												 <br />Linked to: <strong>{$object->Title} ({$object->class}, {$object->ID})</strong>";
+												 <hr />{$file->Filename} is linked to: <strong>{$object->Title} ({$object->class}, {$object->ID})</strong>";
 												$file->Error = "";
 												if(!$file->exists()) {
 													$file->Error .= " Could not be found in database: ".$file->class.", ".$file->ID;
