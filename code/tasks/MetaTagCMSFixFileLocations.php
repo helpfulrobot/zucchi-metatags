@@ -89,31 +89,38 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						$fieldName = $check->DataObjectFieldName."ID";
 						$fileClassName = $check->FileClassName;
 						$folder = null;
+						$folderSummary = null;
+						$folderSummary = array();
 						DB::alteration_message(
 							"<hr /><h3>All files attached to $objectName . $fieldName <a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">can be moved to</a> <span style=\"color: green;\">$folderName</span></h3>"
 						);
-						if($this->summaryOnly) {
-							//do nothing
+						$objects = null;
+						if($check->FileIsFile) {
+							$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
 						}
-						else {
-							$objects = null;
-							if($check->FileIsFile) {
-								$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
-							}
-							elseif($check->DataObjectIsFile) {
-								//$fieldName = $check->DataObjectClassName."ID";
-								$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
-							}
-							if($objects && $objects->count()) {
-								foreach($objects as $object) {
-									if($object instanceOf File) {
-										$file = $object;//do nothing
+						elseif($check->DataObjectIsFile) {
+							//$fieldName = $check->DataObjectClassName."ID";
+							$objects = DataObject::get($objectName, "\"".$fieldName."\" > 0");
+						}
+						if($objects && $objects->count()) {
+							foreach($objects as $object) {
+								if($object instanceOf File) {
+									$file = $object;//do nothing
+								}
+								else {
+									$file = DataObject::get_by_id("File", $object->$fieldName);
+								}
+								if($file) {
+									if($file instanceOf Folder) {
+										//do nothing
 									}
 									else {
-										$file = DataObject::get_by_id("File", $object->$fieldName);
-									}
-									if($file) {
-										if($file instanceOf Folder) {
+										$fileFolderLocations = str_replace($file->Name, "", $file->FileName);
+										if(!isset($folderSummary[$fileFolderLocations])) {
+											$folderSummary[$fileFolderLocations] = 0;
+										}
+										$folderSummary[$fileFolderLocations]++;
+										if($this->summaryOnly) {
 											//do nothing
 										}
 										else {
@@ -138,11 +145,20 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 														"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
 														"created"
 													);
-													if($this->forReal) {
-														if($file->exists()) {
-															if(file_exists($file->getFullPath())) {
-																$file->ParentID = $folder->ID;
-																$file->write();
+													if($file->exists()) {
+														if(file_exists($file->getFullPath())) {
+															$newLocation = $folder->getFullPath()."/".$file->Name;
+															if(file_exists($newLocation)) {
+																DB::alteration_message(
+																	"ERROR: can not move the file, as it already exists in the new location ".$file->getFullPath()." ",
+																	"deleted"
+																);
+															}
+															else {
+																if($this->forReal) {
+																	$file->ParentID = $folder->ID;
+																	$file->write();
+																}
 															}
 															else {
 																DB::alteration_message(
@@ -158,22 +174,34 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 															);
 														}
 													}
+													else {
+														DB::alteration_message(
+															"ERROR: file not saved yet! /".$file->FileName." ",
+															"deleted"
+														);
+													}
 												}
 											}
 										}
 									}
-									else {
-										DB::alteration_message(
-											"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
-											"deleted"
-										);
-									}
+								}
+								else {
+									DB::alteration_message(
+										"Could not find file referenced by ".$object->getTitle()." (".$object->class.", ".$object->ID.")",
+										"deleted"
+									);
 								}
 							}
 							else {
 								DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
 							}
 						}
+						DB::alteration_message("
+							Current distribution of files: <ul><li>
+								".implode("</li><li>", $folderSummary)."
+							</li></ul><hr />
+						", "restored"
+						);
 					}
 				}
 			}
