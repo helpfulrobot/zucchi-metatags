@@ -227,7 +227,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 							DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
 						}
 						if(count($folderSummary)) {
-							DB::alteration_message("<br /><br /><br /><br /><br /><br /><br /><br />");
+							DB::alteration_message("<br /><br />");
 							DB::alteration_message("---------------------------------------");
 							DB::alteration_message("Current situation for $folderName:");
 							DB::alteration_message("---------------------------------------");
