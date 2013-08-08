@@ -227,7 +227,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 							DB::alteration_message("Current situation for $folderName:");
 							DB::alteration_message("---------------------------------------");
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
-								if("assets/".$folderName"/" == $folderCountLocation) {
+								if("assets/".$folderName."/" == $folderCountLocation) {
 									DB::alteration_message(" ... $folderCount x $folderCountLocation (already moved)", "created");
 								}
 								else {
