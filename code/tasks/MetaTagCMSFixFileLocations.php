@@ -231,21 +231,23 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 							DB::alteration_message("---------------------------------------");
 							DB::alteration_message("Current situation for $folderName:");
 							DB::alteration_message("---------------------------------------");
+							$filesToMoveCount = 0;
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
 								if("assets/".$folderName."/" == $folderCountLocation) {
 									DB::alteration_message(" ... $folderCount x $folderCountLocation (already moved)", "created");
 								}
 								else {
 									DB::alteration_message(" ... $folderCount x $folderCountLocation");
+									$filesToMoveCount += $folderCount;
 								}
 							}
 							if(!$this->showMoreDetails) {
 								DB::alteration_message("---------------------------------------");
 								DB::alteration_message("<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName))."\">Show More Details?</a>");
 							}
-							if(!$this->forReal) {
+							if(!$this->forReal && $filesToMoveCount) {
 								DB::alteration_message("---------------------------------------");
-								DB::alteration_message("<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move all files to: <span style=\"color: green;\">$folderName</span>?</a>");
+								DB::alteration_message("<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move badly located files (".$filesToMoveCount.") to: <span style=\"color: green;\">$folderName</span>?</a>");
 							}
 							DB::alteration_message("---------------------------------------");
 							DB::alteration_message("---------------------------------------");
