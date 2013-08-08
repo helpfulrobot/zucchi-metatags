@@ -43,6 +43,12 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	private $cleanupFolder = 0;
 
 	/**
+	 * You can choose to show the images for one relation
+	 * @var Boolean
+	 */
+	private $showImagesFor = 0;
+
+	/**
 	 * only show the summary OR the full details
 	 * summaries only is not available for non-test tasks
 	 * @var Boolean
@@ -115,7 +121,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 										//do nothing
 									}
 									else {
-										$fileFolderLocations = str_replace($file->Name, "", $file->FileName);
+										$fileFolderLocations = str_replace($file->Name, "", $file->Filename);
 										if(!isset($folderSummary[$fileFolderLocations])) {
 											$folderSummary[$fileFolderLocations] = 0;
 										}
@@ -129,20 +135,20 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 											}
 											if($file->ParentID == $folder->ID) {
 												DB::alteration_message(
-													"OK ... ". $file->FileName,
+													"OK ... ". $file->Filename,
 													"created"
 												);
 											}
 											else {
 												if(isset($this->listOfIgnoreFoldersArray[$file->ParentID])) {
 													DB::alteration_message(
-														"NOT MOVING (folder to be ignored): <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+														"NOT MOVING (folder to be ignored): <br />/".$file->Filename." to <br />/assets/".$folderName."/".$file->Name."",
 														"repaired"
 													);
 												}
 												else {
 													DB::alteration_message(
-														"MOVING: <br />/".$file->FileName." to <br />/assets/".$folderName."/".$file->Name."",
+														"MOVING: <br />/".$file->Filename." to <br />/assets/".$folderName."/".$file->Name."",
 														"created"
 													);
 													if($file->exists()) {
@@ -158,6 +164,10 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 																if($this->forReal) {
 																	$file->ParentID = $folder->ID;
 																	$file->write();
+																	DB::alteration_message(
+																		"--- Move completed ---",
+																		"created"
+																	);
 																}
 															}
 														}
@@ -170,7 +180,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 													}
 													else {
 														DB::alteration_message(
-															"ERROR: file not saved yet! /".$file->FileName." ",
+															"ERROR: file not saved yet /".$file->Filename." ",
 															"deleted"
 														);
 													}
@@ -222,11 +232,11 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 					$hasEmptyFolders = true;
 					if(file_exists($folder->getFullPath())) {
 						if(($this->cleanupFolder != $folder->ID) && ($this->cleanupFolder != -1) ) {
-							DB::alteration_message("found an empty folder: <strong>".$folder->FileName."</strong>; <a href=\"".$this->linkWithGetParameter("cleanupfolder", $folder->ID)."\">delete now</a>?", "restored");
+							DB::alteration_message("found an empty folder: <strong>".$folder->Filename."</strong>; <a href=\"".$this->linkWithGetParameter("cleanupfolder", $folder->ID)."\">delete now</a>?", "restored");
 						}
 						if(($this->cleanupFolder == $folder->ID) || $this->cleanupFolder == -1) {
 							DB::alteration_message("
-								Deleting empty folder: <strong>".$folder->FileName."</strong>",
+								Deleting empty folder: <strong>".$folder->Filename."</strong>",
 								"deleted"
 							);
 							$folder->delete();
@@ -251,7 +261,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	}
 
 	private function addListOfIgnoreFoldersArray(Folder $folderToIgnore) {
-		$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->FileName;
+		$this->listOfIgnoreFoldersArray[$folderToIgnore->ID] = $folderToIgnore->Filename;
 		$childFolders = DataObject::get("Folder", "ParentID = ".$folderToIgnore->ID);
 		if($childFolders && $childFolders->count()) {
 			foreach($childFolders as $childFolder) {
