@@ -140,17 +140,17 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 												$fileDetails = "
 												 <br />Linked to: <strong>{$object->Title} ({$object->class}, {$object->ID})</strong>";
 												$file->Error = "";
-												if($file->exists()) {
-													$file->Error .= " Could not be found in database";
+												if(!$file->exists()) {
+													$file->Error .= " Could not be found in database: ".$file->class.", ".$file->ID;
 												}
-												if(file_exists($file->getFullPath())) {
-													$file->Error .= " Physical file could not be found";
+												if(!file_exists($file->getFullPath())) {
+													$file->Error .= " Physical file could not be found: ".$file->getFullPath();
 												}
 												if($file instanceOf Image) {
 													$fileDetails .= $file->renderWith("MetaTagCMSImageDetails");
 												}
 												else {
-													$fileDetails .= $file->Error;
+													$fileDetails .= "<div style=\"color: red\">$file->Error</div>";
 												}
 												DB::alteration_message($fileDetails);
 											}

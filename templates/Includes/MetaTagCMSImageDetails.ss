@@ -2,7 +2,7 @@
 	<div class="iconHolder"><a href="$Link" class="newWindow bold">$CMSThumbnail</a></div>
 <% end_if %>
 <% if Error %>
-	<div class="errorHolder">ERROR: $Error</div>
+	<div class="errorHolder" style="color: red">ERROR: $Error</div>
 <% end_if %>
 <div class="fileInfo">
 	<% if getFileType %><br /><span class="label">Type:</span> <span class="data">$getFileType</span><% end_if %>
