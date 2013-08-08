@@ -46,7 +46,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	 * You can choose to show the images for one relation
 	 * @var Boolean
 	 */
-	private $showMoreDetails = 0;
+	private $showMoreDetails = "";
 
 	/**
 	 * only show the summary OR the full details
@@ -71,7 +71,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			$this->cleanupFolder = intval($_GET["cleanupfolder"]);
 		}
 		if(isset($_GET["showmoredetails"])) {
-			$this->showMoreDetails = intval($_GET["showmoredetails"]);
+			$this->showMoreDetails = urldecode($_GET["showmoredetails"]);
 		}
 
 		//work out the folders to ignore...
@@ -224,13 +224,14 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						if(count($folderSummary)) {
 							DB::alteration_message("
 								----------------------------------- <br />
-								Current situation for $folderName:
-								----------------------------------- <br />"
+								Current situation for $folderName:  <br />
+								-----------------------------------"
 							);
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
 								DB::alteration_message(" ... $folderCount x $folderCountLocation");
 							}
 							DB::alteration_message("
+								----------------------------------- <br />
 								<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName))."\">Show More Details?</a><br />
 								<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move now?</a><br />
 								----------------------------------- <br />"
