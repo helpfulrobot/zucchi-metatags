@@ -132,7 +132,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 										if($this->summaryOnly) {
 											//do nothing
 										}
-										elseif {
+										else {
 											if(!$folder){
 												$folder = Folder::findOrMake($folderName);
 											}
