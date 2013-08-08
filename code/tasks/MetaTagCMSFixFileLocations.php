@@ -222,27 +222,25 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 							DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
 						}
 						if(count($folderSummary)) {
-							DB::alteration_message("
-								----------------------------------- <br />
-								Current situation for $folderName:  <br />
-								-----------------------------------"
-							);
+							DB::alteration_message("<br /><br /><br /><br /><br /><br /><br /><br />");
+							DB::alteration_message("---------------------------------------");
+							DB::alteration_message("Current situation for $folderName:");
+							DB::alteration_message("---------------------------------------");
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
-								DB::alteration_message(" ... $folderCount x $folderCountLocation");
+								if("assets/".$folderName"/" == $folderCountLocation) {
+									DB::alteration_message(" ... $folderCount x $folderCountLocation (already moved)", "created");
+								}
+								else {
+									DB::alteration_message(" ... $folderCount x $folderCountLocation");
+								}
 							}
 							if(!$this->showMoreDetails) {
-								DB::alteration_message("
-									----------------------------------- <br />
-									<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName))."\">Show More Details?</a><br />
-									----------------------------------- <br />"
-								);
+								DB::alteration_message("---------------------------------------");
+								DB::alteration_message("<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName))."\">Show More Details?</a>");
 							}
 							if(!$this->forReal) {
-								DB::alteration_message("
-									----------------------------------- <br />
-									<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move now?</a><br />
-									----------------------------------- <br />"
-								);
+								DB::alteration_message("---------------------------------------");
+								DB::alteration_message("<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move all files to: <span style=\"color: green;\">$folderName</span>?</a>");
 							}
 						}
 					}
@@ -255,43 +253,50 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 		else {
 			DB::alteration_message("We are now showing folders only; <a href=\"".$this->linkWithGetParameter("all",1)."\">view all</a><hr />", "restored");
 		}
-		DB::alteration_message("---------------------------------------");
-		DB::alteration_message("---------------------------------------");
-		DB::alteration_message("CLEANING FOLDERS");
-		DB::alteration_message("---------------------------------------");
-		DB::alteration_message("---------------------------------------");
-		$folders = DataObject::get("Folder");
-		$hasEmptyFolders = false;
-		if($folders && $folders->count()) {
-			foreach($folders as $folder) {
-				if(!MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
-					$hasEmptyFolders = true;
-					if(file_exists($folder->getFullPath())) {
-						if(($this->cleanupFolder != $folder->ID) && ($this->cleanupFolder != -1) ) {
-							DB::alteration_message("found an empty folder: <strong>".$folder->Filename."</strong>; <a href=\"".$this->linkWithGetParameter("cleanupfolder", $folder->ID)."\">delete now</a>?", "restored");
+		if($this->forReal || $this->showMoreDetails) {
+			//do nothing;
+		}
+		else {
+			DB::alteration_message("<br /><br /><br /><br /><br /><br /><br /><br />");
+			DB::alteration_message("---------------------------------------");
+			DB::alteration_message("---------------------------------------");
+			DB::alteration_message("CLEANING FOLDERS");
+			DB::alteration_message("---------------------------------------");
+			DB::alteration_message("---------------------------------------");
+			$folders = DataObject::get("Folder");
+			$hasEmptyFolders = false;
+			if($folders && $folders->count()) {
+				foreach($folders as $folder) {
+					if(!MetaTagCMSControlFileUse::file_usage_count($folder, true)) {
+						$hasEmptyFolders = true;
+						if(file_exists($folder->getFullPath())) {
+							if(($this->cleanupFolder != $folder->ID) && ($this->cleanupFolder != -1) ) {
+								DB::alteration_message("found an empty folder: <strong>".$folder->Filename."</strong>; <a href=\"".$this->linkWithGetParameter("cleanupfolder", $folder->ID)."\">delete now</a>?", "restored");
+							}
+							if(($this->cleanupFolder == $folder->ID) || $this->cleanupFolder == -1) {
+								DB::alteration_message("
+									Deleting empty folder: <strong>".$folder->Filename."</strong>",
+									"deleted"
+								);
+								$folder->delete();
+							}
 						}
-						if(($this->cleanupFolder == $folder->ID) || $this->cleanupFolder == -1) {
-							DB::alteration_message("
-								Deleting empty folder: <strong>".$folder->Filename."</strong>",
-								"deleted"
-							);
-							$folder->delete();
+						else {
+							DB::alteration_message("Could not find this phyiscal folder - it is empty can be deleted: ".$folder->getFullPath(), "deleted");
 						}
-					}
-					else {
-						DB::alteration_message("Could not find this phyiscal folder - it is empty can be deleted: ".$folder->getFullPath(), "deleted");
 					}
 				}
 			}
-		}
-		else {
-			DB::alteration_message("Could not find any folders. There might be something wrong!", "deleted");
-		}
-		if(!$hasEmptyFolders) {
-			DB::alteration_message("There are no empty folders!", "created");
-		}
-		else {
-			DB::alteration_message("Delete <a href=\"".$this->linkWithGetParameter("cleanupfolder", -1)."\">all empty folders</a>?", "deleted");
+			else {
+				DB::alteration_message("Could not find any folders. There might be something wrong!", "deleted");
+			}
+			if(!$hasEmptyFolders) {
+				DB::alteration_message("There are no empty folders!", "created");
+			}
+			else {
+				DB::alteration_message("Delete <a href=\"".$this->linkWithGetParameter("cleanupfolder", -1)."\">all empty folders</a>?", "deleted");
+			}
+
 		}
 
 	}
