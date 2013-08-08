@@ -147,7 +147,7 @@ class MetaTagCMSControlFiles extends Controller {
 		return $this->returnAjaxOrRedirectBack();
 	}
 
-	function update(){
+	function update(SS_HTTPRequest $request) {
 		if(isset($_GET["fieldName"])) {
 			$fieldNameString = $_GET["fieldName"];
 			$fieldNameArray = explode("_", $fieldNameString);
