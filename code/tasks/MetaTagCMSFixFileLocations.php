@@ -230,12 +230,20 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
 								DB::alteration_message(" ... $folderCount x $folderCountLocation");
 							}
-							DB::alteration_message("
-								----------------------------------- <br />
-								<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName))."\">Show More Details?</a><br />
-								<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move now?</a><br />
-								----------------------------------- <br />"
-							);
+							if(!$this->showMoreDetails) {
+								DB::alteration_message("
+									----------------------------------- <br />
+									<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName))."\">Show More Details?</a><br />
+									----------------------------------- <br />"
+								);
+							}
+							if(!$this->forReal) {
+								DB::alteration_message("
+									----------------------------------- <br />
+									<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move now?</a><br />
+									----------------------------------- <br />"
+								);
+							}
 						}
 					}
 				}
