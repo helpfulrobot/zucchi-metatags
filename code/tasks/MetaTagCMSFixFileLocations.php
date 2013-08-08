@@ -152,7 +152,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 												else {
 													$fileDetails .= "<div style=\"color: red\">$file->Error</div>";
 												}
-												DB::alteration_message($fileDetails);
+												DB::alteration_message($fileDetails."<hr />");
 											}
 											if($file->ParentID == $folder->ID) {
 												DB::alteration_message(
