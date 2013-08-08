@@ -193,7 +193,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						if(count($folderSummary)) {
 							DB::alteration_message("
 								----------------------------------- <br />
-								Current distribution of files destined for: $folderName",
+								Current distribution of files destined for: $folderName"
 							);
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
 								DB::alteration_message(" ... $folderCount x $folderCountLocation");
