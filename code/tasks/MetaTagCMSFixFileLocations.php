@@ -247,6 +247,10 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 								DB::alteration_message("---------------------------------------");
 								DB::alteration_message("<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move all files to: <span style=\"color: green;\">$folderName</span>?</a>");
 							}
+							DB::alteration_message("---------------------------------------");
+							DB::alteration_message("---------------------------------------");
+							DB::alteration_message("---------------------------------------");
+							DB::alteration_message("---------------------------------------");
 						}
 					}
 				}
