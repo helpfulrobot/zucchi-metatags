@@ -186,9 +186,9 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 									);
 								}
 							}
-							else {
-								DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
-							}
+						}
+						else {
+							DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
 						}
 						DB::alteration_message("
 							Current distribution of files: <ul><li>
