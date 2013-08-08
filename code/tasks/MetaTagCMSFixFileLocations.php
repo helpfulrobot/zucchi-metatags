@@ -150,7 +150,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 															$newLocation = $folder->getFullPath()."/".$file->Name;
 															if(file_exists($newLocation)) {
 																DB::alteration_message(
-																	"ERROR: can not move the file, as it already exists in the new location ".$file->getFullPath()." ",
+																	"ERROR: can not move the file as it already exists in the new location ".$newLocation." ",
 																	"deleted"
 																);
 															}
@@ -160,16 +160,10 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 																	$file->write();
 																}
 															}
-															else {
-																DB::alteration_message(
-																	"ERROR: phyiscal file could not be found: ".$file->getFullPath()." ",
-																	"deleted"
-																);
-															}
 														}
 														else {
 															DB::alteration_message(
-																"ERROR: file not found in database: /".$file->FileName." ",
+																"ERROR: phyiscal file could not be found: ".$file->getFullPath()." ",
 																"deleted"
 															);
 														}
