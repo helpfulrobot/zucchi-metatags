@@ -190,6 +190,12 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						else {
 							DB::alteration_message("No objects in $objectName $fieldName.", "deleted");
 						}
+						if(count($folderSummary)) {
+							DB::alteration_message("Current distribution of files destined for: $folderName", "restored");
+							foreach($folderSummary as $folderCountLocation => $folderCount) {
+								DB::alteration_message(" ... $folderCount x $folderCountLocation", "restored");
+							}
+						}
 						DB::alteration_message("
 							Current distribution of files: <ul><li>
 								".implode("</li><li>", $folderSummary)."
