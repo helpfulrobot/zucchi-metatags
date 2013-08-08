@@ -46,7 +46,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 	 * You can choose to show the images for one relation
 	 * @var Boolean
 	 */
-	private $showImagesFor = 0;
+	private $showMoreDetails = 0;
 
 	/**
 	 * only show the summary OR the full details
@@ -70,6 +70,9 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 		if(isset($_GET["cleanupfolder"])) {
 			$this->cleanupFolder = intval($_GET["cleanupfolder"]);
 		}
+		if(isset($_GET["showmoredetails"])) {
+			$this->showMoreDetails = intval($_GET["showmoredetails"]);
+		}
 
 		//work out the folders to ignore...
 		foreach(self::$folders_to_ignore as $folderToIgnoreName) {
@@ -90,15 +93,15 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 			if($checks && $checks->count()) {
 				foreach($checks as $check) {
 					$folderName = $check->DataObjectClassName."_".$check->DataObjectFieldName;
-					if(!$this->doOne || $this->doOne == $folderName) {
+					if((!$this->doOne || ($this->doOne == $folderName)) && (!$this->showMoreDetails || ($this->showMoreDetails == $folderName))) {
 						$objectName = $check->DataObjectClassName;
 						$fieldName = $check->DataObjectFieldName."ID";
 						$fileClassName = $check->FileClassName;
 						$folder = null;
-						$folderSummary = null;
+						unset($folderSummary);
 						$folderSummary = array();
 						DB::alteration_message(
-							"<hr /><h3>All files attached to $objectName . $fieldName <a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">can be moved to</a> <span style=\"color: green;\">$folderName</span></h3>"
+							"<hr /><h3>All files attached to $objectName . $fieldName should go in: <span style=\"color: green;\">$folderName</span></h3>"
 						);
 						$objects = null;
 						if($check->FileIsFile) {
@@ -129,9 +132,27 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 										if($this->summaryOnly) {
 											//do nothing
 										}
-										else {
+										elseif {
 											if(!$folder){
 												$folder = Folder::findOrMake($folderName);
+											}
+											if($file != $object && $this->showMoreDetails) {
+												$fileDetails = "
+												 <br />Linked to: <strong>{$object->Title} ({$object->class}, {$object->ID})</strong>";
+												$file->Error = "";
+												if($file->exists()) {
+													$file->Error .= " Could not be found in database";
+												}
+												if(file_exists($file->getFullPath())) {
+													$file->Error .= " Physical file could not be found";
+												}
+												if($file instanceOf Image) {
+													$fileDetails .= $file->renderWith("MetaTagCMSImageDetails");
+												}
+												else {
+													$fileDetails .= $file->Error;
+												}
+												DB::alteration_message($fileDetails);
 											}
 											if($file->ParentID == $folder->ID) {
 												DB::alteration_message(
@@ -203,11 +224,17 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 						if(count($folderSummary)) {
 							DB::alteration_message("
 								----------------------------------- <br />
-								Current distribution of files destined for: $folderName"
+								Current situation for $folderName:
+								----------------------------------- <br />"
 							);
 							foreach($folderSummary as $folderCountLocation => $folderCount) {
 								DB::alteration_message(" ... $folderCount x $folderCountLocation");
 							}
+							DB::alteration_message("
+								<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName)."\">Show More Details?</a><br />
+								<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move now?</a><br />
+								----------------------------------- <br />"
+							);
 						}
 					}
 				}
