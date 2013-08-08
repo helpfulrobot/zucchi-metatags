@@ -233,7 +233,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 							DB::alteration_message("
 								<a href=\"".$this->linkWithGetParameter("showmoredetails", urlencode($folderName)."\">Show More Details?</a><br />
 								<a href=\"".$this->linkWithGetParameter("doone", $folderName)."\">Move now?</a><br />
-								----------------------------------- <br />"
+								----------------------------------- <br />";
 							);
 						}
 					}
