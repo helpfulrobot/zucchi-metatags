@@ -185,7 +185,7 @@ class MetaTagCMSFixImageLocations extends BuildTask {
 															}
 															else {
 																if($this->forReal) {
-																	$file->ParentID = $folder->ID;
+																	$file->setParentID($folder->ID);
 																	$file->write();
 																	DB::alteration_message(
 																		"--- Move completed ---",

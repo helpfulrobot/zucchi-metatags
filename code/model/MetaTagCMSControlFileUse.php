@@ -676,7 +676,7 @@ class MetaTagCMSControlFileUse_RecyclingRecord extends DataObject {
 							$record->FromFolderID = $file->ParentID;
 							$record->write();
 							//doing it.....
-							$file->ParentID = $recylcingFolder->ID;
+							$file->setParentID($recylcingFolder->ID);
 							$file->write();
 							//IMPORTANT!
 							return true;
