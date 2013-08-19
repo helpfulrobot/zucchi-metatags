@@ -64,6 +64,11 @@ var MetaTagCMSControl = {
 						jQuery('.response').text("records updated ....");
 						jQuery('body').removeClass("loading");
 						MetaTagCMSControl.init();
+						jQuery('tbody').fadeTo(
+							"fast",
+							"1",
+							function() {MetaTagCMSControl.init();}
+						);
 					},
 					"html"
 				);

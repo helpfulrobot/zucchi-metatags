@@ -91,7 +91,7 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 	}
 
 
-	function update($request) {
+	function update(SS_HTTPRequest $request) {
 		if(isset($_GET["fieldName"])) {
 			$fieldNameString = $_GET["fieldName"];
 			$fieldNameArray = explode("_", $fieldNameString);

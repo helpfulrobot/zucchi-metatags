@@ -14,27 +14,20 @@
 				<div class="iconHolder"><img src="/metatags/images/Folder.png" alt="$ClassName" class="defaultIcon" /></div>
 				<div class="fileInfo">
 			<% else %>
-				<% if CMSThumbnail %>
-					<div class="iconHolder"><a href="$Link" class="newWindow bold">$CMSThumbnail</a></div>
-				<% end_if %>
-				<% if Error %>
-					<div class="errorHolder">ERROR: $Error</div>
-				<% end_if %>
-				<div class="fileInfo">
-					<% if getFileType %><br /><span class="label">Type:</span> <span class="data">$getFileType</span><% end_if %>
-					<% if getSize %><br /><span class="label">Size:</span> <span class="data">$getSize</span><% end_if %>
-					<% if getDimensions %><br /><span class="label">Dimensions:</span> <span class="data">$getDimensions</span><% end_if %>
+					<% include MeteTagCMSImageDetails %>
 			<% end_if %>
 					<div class="usage">
 			<% if UsageCount %>
-						<span class="label">Used:</span> <span class="data">$UsageCount time(s)</span>
+					<span class="label">Used:</span> <span class="data">$UsageCount time(s)</span>
+					<% if ListOfPlaces.Count %><ul><% control ListOfPlaces %>
+						<li><% if Link %><a href="$Link">$Title</a><% else %>$ClassName ($Title)<% end_if %></li>
+						<% end_control %></ul><% end_if %>
 						<% if ListOfPlaces.Count %><ul><% control ListOfPlaces %>
 							<li><% if Link %><a href="$Link">$Title</a><% else %>$ClassName ($Title)<% end_if %></li>
 						<% end_control %></ul><% end_if %>
 			<% else %>
 					<a href="$RecycleLink" class=" ajaxify">not used on the site: <img src="metatags/images/recycle.png" alt="Recycle" title="Recycle" /></a>
 			<% end_if %>
-					</div>
 				</div>
 		</td>
 
