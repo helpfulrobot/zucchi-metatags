@@ -127,12 +127,14 @@ class MetaTagCMSControlPages extends MetaTagCMSControlFiles {
 	}
 
 
-	protected function returnAjaxOrRedirectBack(){
+	protected function returnAjaxOrRedirectBack($verbose = false){
 		if(Director::is_ajax()) {
-			return $this->renderWith("MetaTagCMSControlPagesAjax");
+			return $this->renderWith("MetaTagCMSControlFilesAjax");
 		}
 		else {
-			Director::redirect($this->Link());
+			if(!$verbose) {
+				Director::redirect($this->Link());
+			}
 			return array();
 		}
 	}
